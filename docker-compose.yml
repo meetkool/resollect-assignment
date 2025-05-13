@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev_secret_key
+      - DATABASE_URL=sqlite:///db.sqlite3
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py update_todo_statuses &&
+             gunicorn --bind 0.0.0.0:8000 backend.wsgi" 

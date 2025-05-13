@@ -64,8 +64,6 @@ export const todoApi = {
     const response = await fetch(`${API_URL}/todos/${id}/`, {
       method: 'DELETE',
     });
-    // Consider both 204 (successful deletion) and 404 (already deleted) as success
-    // This prevents errors when React StrictMode causes the function to be called twice
     if (!response.ok && response.status !== 404) {
       throw new Error(`Failed to delete todo with id ${id}`);
     }

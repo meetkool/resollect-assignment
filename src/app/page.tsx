@@ -1,42 +1,53 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { Todo, CreateTodoPayload } from '@/types/todo';
 import { todoApi } from '@/services/todoApi';
 import { getAutoStatus } from '@/utils/todoUtils';
 import TodoForm from '@/components/TodoForm';
 import TodoTabs from '@/components/TodoTabs';
+
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   // Fetch todos on component mount
   useEffect(() => {
     const fetchAndUpdate = async () => {
       await fetchTodos();
       await forceCheckExpiredTasks();
     };
+    
     fetchAndUpdate();
+    
     // Set up an interval to check and update task statuses based on deadlines
     const intervalId = setInterval(updateTaskStatuses, 10000); // every 10 seconds
+    
     return () => {
       clearInterval(intervalId);
     };
   }, []);
+
   // Force check all tasks for expired status
   const forceCheckExpiredTasks = async () => {
     console.log("Force checking all tasks for expired status...");
     // Safety check - if no todos, don't try to update
     if (!Array.isArray(todos) || todos.length === 0) return;
+    
     const now = new Date();
     const updatedTodos = [...todos];
     let hasChanges = false;
+    
     // Check each todo for expired deadline
     for (let i = 0; i < updatedTodos.length; i++) {
       const todo = updatedTodos[i];
       const deadline = new Date(todo.deadline);
+      
       // If deadline has passed and status is still 'ongoing'
       if (deadline < now && todo.status === 'ongoing') {
         console.log(`Found expired task: ${todo.id}, marking as failure`);
+        
         try {
           // Update in the backend
           const updatedTodo = await todoApi.updateTodo(todo.id, { status: 'failure' });
@@ -47,18 +58,23 @@ export default function Home() {
         }
       }
     }
+    
     if (hasChanges) {
       console.log("Updated expired tasks, refreshing state");
       setTodos(updatedTodos);
     }
   };
+
   const fetchTodos = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const data = await todoApi.getTodos();
+      
       // Log the data structure for debugging
       console.log("API response data:", data);
+      
       // Ensure we're getting an array back
       if (Array.isArray(data)) {
         setTodos(data);
@@ -75,18 +91,23 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+
   const updateTaskStatuses = async () => {
     // Safety check - if no todos, don't try to update
     if (!Array.isArray(todos) || todos.length === 0) return;
+    
     // Check each todo and update if needed
     const updatedTodos = [...todos]; // Create a copy to avoid mutation issues
     let hasChanges = false;
+    
     for (let i = 0; i < updatedTodos.length; i++) {
       const todo = updatedTodos[i];
       const autoStatus = getAutoStatus(todo);
+      
       // If status needs changing due to deadline passing
       if (todo.status !== autoStatus) {
         console.log(`Updating todo ${todo.id} from ${todo.status} to ${autoStatus}`);
+        
         try {
           // Update in the backend
           const updatedTodo = await todoApi.updateTodo(todo.id, { status: autoStatus });
@@ -97,11 +118,13 @@ export default function Home() {
         }
       }
     }
+    
     // Only update state if changes were made
     if (hasChanges) {
       setTodos(updatedTodos);
     }
   };
+
   const handleCreateTodo = async (todoData: CreateTodoPayload) => {
     try {
       const newTodo = await todoApi.createTodo(todoData);
@@ -112,6 +135,7 @@ export default function Home() {
       throw error; // Rethrow to handle in the form
     }
   };
+
   const handleDeleteTodo = async (id: string) => {
     try {
       await todoApi.deleteTodo(id);
@@ -123,6 +147,7 @@ export default function Home() {
       console.error(`Failed to delete todo with id ${id}:`, error);
     }
   };
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 16px' }}>
       <header style={{ marginBottom: '40px', textAlign: 'center' }}>
@@ -131,10 +156,12 @@ export default function Home() {
           Tasks automatically transition based on deadlines
         </p>
       </header>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
         <div>
           <TodoForm onSubmit={handleCreateTodo} />
         </div>
+        
         <div>
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>

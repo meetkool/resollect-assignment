@@ -1,11 +1,11 @@
 import os
-import environ
+from environ import Env
 import dj_database_url
 from pathlib import Path
 # Initialize environment variables
-env = environ.Env()
+env = Env()
 # Read environment variables from .env file
-environ.Env.read_env()
+Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production

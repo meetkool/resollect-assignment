@@ -1,18 +1,23 @@
-import { CreateTodoPayload } from '@/types/todo';
+import { CreateTodoPayload, TodoPriority } from '@/types/todo';
 import { useState } from 'react';
+
 interface TodoFormProps {
   onSubmit: (todo: CreateTodoPayload) => Promise<void>;
 }
+
 export default function TodoForm({ onSubmit }: TodoFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [priority, setPriority] = useState<TodoPriority>('medium');
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple validation
     if (!title.trim()) {
       setError('Title is required');
       return;
@@ -28,14 +33,17 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
         title: title.trim(),
         description: description.trim(),
         deadline: new Date(deadline).toISOString(),
+        priority,
+        tags,
       });
-      // Show success message
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-      // Reset form
       setTitle('');
       setDescription('');
       setDeadline('');
+      setPriority('medium');
+      setTags([]);
+      setTagInput('');
     } catch (error) {
       console.error('Failed to create todo:', error);
       setError('Failed to create todo. Please try again.');
@@ -43,6 +51,26 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
       setIsLoading(false);
     }
   };
+
+  const handleAddTag = () => {
+    const trimmedTag = tagInput.trim();
+    if (trimmedTag && !tags.includes(trimmedTag)) {
+      setTags([...tags, trimmedTag]);
+      setTagInput('');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
   return (
     <div className="card bg-white shadow-lg border-t-4 border-t-primary" style={{ padding: '1.5rem' }}>
       <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center">
@@ -94,18 +122,111 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
             rows={3}
           />
         </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          <div>
+            <label htmlFor="deadline" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.375rem' }}>
+              Deadline <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <div>
+              <input
+                type="datetime-local"
+                id="deadline"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                style={{ width: '100%', padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}
+                min={new Date().toISOString().slice(0, 16)}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="priority" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.375rem' }}>
+              Priority
+            </label>
+            <div>
+              <select
+                id="priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as TodoPriority)}
+                style={{ width: '100%', padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)', backgroundColor: 'white' }}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <div>
-          <label htmlFor="deadline" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.375rem' }}>
-            Deadline <span style={{ color: '#ef4444' }}>*</span>
+          <label htmlFor="tags" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.375rem' }}>
+            Tags
           </label>
-          <input
-            type="datetime-local"
-            id="deadline"
-            value={deadline}
-            onChange={(e) => setDeadline(e.target.value)}
-            style={{ width: '100%', padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}
-            min={new Date().toISOString().slice(0, 16)}
-          />
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <input
+              type="text"
+              id="tags"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              style={{ flexGrow: 1, padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }}
+              placeholder="Add tags (press Enter to add)"
+            />
+            <button
+              type="button"
+              onClick={handleAddTag}
+              style={{ 
+                padding: '0.625rem 0.875rem', 
+                backgroundColor: '#f3f4f6', 
+                border: '1px solid #d1d5db', 
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#4b5563'
+              }}
+            >
+              Add
+            </button>
+          </div>
+          {tags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+              {tags.map((tag) => (
+                <span 
+                  key={tag} 
+                  style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '0.25rem', 
+                    padding: '0.25rem 0.75rem', 
+                    backgroundColor: '#e0f2fe', 
+                    color: '#0284c7', 
+                    borderRadius: '9999px',
+                    fontSize: '0.75rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  {tag}
+                  <button 
+                    type="button" 
+                    onClick={() => removeTag(tag)}
+                    style={{ 
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '9999px',
+                      backgroundColor: '#bae6fd',
+                      color: '#0284c7',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <button
           type="submit"

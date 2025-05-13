@@ -7,7 +7,6 @@ interface ProductivityByHourChartProps {
 }
 const ProductivityByHourChart = ({ data }: ProductivityByHourChartProps) => {
   const chartRef = useRef<SVGSVGElement>(null);
-  // Format hour for display (0-23 to AM/PM format)
   const formatHour = (hour: number): string => {
     if (hour === 0) return '12 AM';
     if (hour === 12) return '12 PM';
@@ -15,15 +14,11 @@ const ProductivityByHourChart = ({ data }: ProductivityByHourChartProps) => {
   };
   useEffect(() => {
     if (!chartRef.current || !data.length) return;
-    // Sort data by hour
     const sortedData = [...data].sort((a, b) => a.hour - b.hour);
-    // Clear any existing chart
     d3.select(chartRef.current).selectAll('*').remove();
-    // Set dimensions
     const margin = { top: 20, right: 30, bottom: 50, left: 40 };
     const width = chartRef.current.clientWidth - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
-    // Create SVG
     const svg = d3.select(chartRef.current)
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)

@@ -11,14 +11,10 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('ongoing');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]);
-  // Ensure todos is actually an array before filtering
   const todoArray = Array.isArray(todos) ? todos : [];
-  // Filter todos based on both active tab and search term
   useEffect(() => {
     const filtered = todoArray.filter(todo => {
-      // First filter by tab
       const matchesTab = activeTab === 'all' || todo.status === activeTab;
-      // Then filter by search term
       const matchesSearch = searchTerm === '' || 
         todo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         todo.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -26,14 +22,12 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
     });
     setFilteredTodos(filtered);
   }, [todoArray, activeTab, searchTerm]);
-  // Calculate tab counts safely
   const tabCounts = {
     all: todoArray.length,
     ongoing: todoArray.filter(todo => todo.status === 'ongoing').length,
     success: todoArray.filter(todo => todo.status === 'success').length,
     failure: todoArray.filter(todo => todo.status === 'failure').length,
   };
-  // Debug output for task counts
   console.log("Current todo counts:", { 
     all: tabCounts.all,
     ongoing: tabCounts.ongoing,

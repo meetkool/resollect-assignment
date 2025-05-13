@@ -2,16 +2,19 @@ import { Todo } from '@/types/todo';
 import { formatDeadline, getTimeRemainingText } from '@/utils/todoUtils';
 import { useState } from 'react';
 import { todoApi } from '@/services/todoApi';
+
 interface TodoItemProps {
   todo: Todo;
   onUpdate: () => void;
   onDelete: () => void;
 }
+
 export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  // Debug info for this item
+
   console.log(`TodoItem: ${todo.id}, title: ${todo.title}, status: ${todo.status}, deadline: ${todo.deadline}, isExpired: ${new Date(todo.deadline) < new Date()}`);
+
   const handleMarkComplete = async () => {
     if (todo.status === 'success') return;
     try {
@@ -24,6 +27,7 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
       setIsLoading(false);
     }
   };
+
   const handleDelete = async () => {
     try {
       setIsLoading(true);
@@ -35,7 +39,7 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
       setIsLoading(false);
     }
   };
-  // Get the appropriate CSS class based on status
+
   const getStatusClass = () => {
     switch (todo.status) {
       case 'success':
@@ -46,7 +50,7 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
         return 'todo-item-ongoing';
     }
   };
-  // Get appropriate status badge
+
   const getStatusBadge = () => {
     switch (todo.status) {
       case 'success':
@@ -78,13 +82,37 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
         );
     }
   };
-  // Determine time remaining styling
+
+  const getPriorityBadge = () => {
+    const priorityColors = {
+      low: { bg: '#f3f4f6', text: '#4b5563' },
+      medium: { bg: '#fef3c7', text: '#d97706' },
+      high: { bg: '#fee2e2', text: '#dc2626' }
+    };
+    
+    return (
+      <span style={{ 
+        backgroundColor: priorityColors[todo.priority]?.bg || '#f3f4f6',
+        color: priorityColors[todo.priority]?.text || '#4b5563',
+        fontSize: '0.675rem',
+        fontWeight: '600',
+        padding: '0.125rem 0.5rem',
+        borderRadius: '9999px',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em'
+      }}>
+        {todo.priority}
+      </span>
+    );
+  };
+
   const getTimeRemainingStyles = () => {
     const isExpired = new Date(todo.deadline) < new Date();
     if (todo.status === 'success') return 'text-green-600';
     if (isExpired) return 'text-red-600';
     return 'text-blue-600';
   };
+
   return (
     <div style={{ 
       padding: '1.25rem',
@@ -98,10 +126,12 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
         <div style={{ flex: '1' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <h3 style={{ fontWeight: '600', fontSize: '1.125rem' }}>{todo.title}</h3>
             {getStatusBadge()}
+            {getPriorityBadge()}
           </div>
+          
           <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
             <span style={{ color: '#6b7280', display: 'flex', alignItems: 'center' }}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px', marginRight: '6px' }}>
@@ -122,6 +152,34 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
               {getTimeRemainingText(todo.deadline)}
             </span>
           </div>
+          
+          {/* Display tags if they exist */}
+          {todo.tags && todo.tags.length > 0 && (
+            <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {todo.tags.map((tag, index) => (
+                <span 
+                  key={index}
+                  style={{ 
+                    backgroundColor: '#e0f2fe',
+                    color: '#0284c7',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    padding: '0.125rem 0.5rem',
+                    borderRadius: '9999px',
+                    display: 'inline-flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '10px', height: '10px', marginRight: '4px' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+                  </svg>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          
           {todo.description && (
             <div style={{ marginTop: '0.75rem' }}>
               <button 

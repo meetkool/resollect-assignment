@@ -1,18 +1,16 @@
-// Status distribution types
 export interface StatusCount {
   status: string;
   count: number;
 }
-// Weekly completion data
+
 export interface WeeklyCompletionData {
   week_start: string;
   week_end: string;
   total_tasks: number;
   completed_tasks: number;
-  failed_tasks: number;
   completion_rate: number;
 }
-// Analytics API response types
+
 export interface AnalyticsCompletionStats {
   status_distribution: StatusCount[];
   weekly_completion: WeeklyCompletionData[];
