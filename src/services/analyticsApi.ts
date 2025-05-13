@@ -1,5 +1,8 @@
 import { AnalyticsCompletionStats, AnalyticsProductivityPatterns, AnalyticsDurationAnalysis } from '@/types/analytics';
-const API_URL = 'http://localhost:8000/api';
+
+// Use the production API URL directly
+const API_URL = 'http://resollect-assignment-254j.onrender.com/api';
+
 export const analyticsApi = {
   async getCompletionStats(): Promise<AnalyticsCompletionStats> {
     const response = await fetch(`${API_URL}/analytics/completion-stats/`);

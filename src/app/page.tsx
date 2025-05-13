@@ -1,62 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Todo, CreateTodoPayload } from '@/types/todo';
 import { todoApi } from '@/services/todoApi';
 import { getAutoStatus } from '@/utils/todoUtils';
 import TodoForm from '@/components/TodoForm';
 import TodoTabs from '@/components/TodoTabs';
 
+// Set to false to disable excessive console logs
+const DEBUG_MODE = false;
+
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchAndUpdate = async () => {
-      await fetchTodos();
-      await forceCheckExpiredTasks();
-    };
-    
-    fetchAndUpdate();
-    
-    const intervalId = setInterval(updateTaskStatuses, 10000);
-    
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
-
-  const forceCheckExpiredTasks = async () => {
-    console.log("Force checking all tasks for expired status...");
-    if (!Array.isArray(todos) || todos.length === 0) return;
-    
-    const now = new Date();
-    const updatedTodos = [...todos];
-    let hasChanges = false;
-    
-    for (let i = 0; i < updatedTodos.length; i++) {
-      const todo = updatedTodos[i];
-      const deadline = new Date(todo.deadline);
-      
-      if (deadline < now && todo.status === 'ongoing') {
-        console.log(`Found expired task: ${todo.id}, marking as failure`);
-        
-        try {
-          const updatedTodo = await todoApi.updateTodo(todo.id, { status: 'failure' });
-          updatedTodos[i] = updatedTodo;
-          hasChanges = true;
-        } catch (error) {
-          console.error(`Failed to update status for expired todo ${todo.id}:`, error);
-        }
-      }
-    }
-    
-    if (hasChanges) {
-      console.log("Updated expired tasks, refreshing state");
-      setTodos(updatedTodos);
-    }
-  };
+  const lastCheckRef = useRef<number>(0);
 
   const fetchTodos = async () => {
     try {
@@ -65,7 +23,7 @@ export default function Home() {
       
       const data = await todoApi.getTodos();
       
-      console.log("API response data:", data);
+      if (DEBUG_MODE) console.log("API response data:", data);
       
       if (Array.isArray(data)) {
         setTodos(data);
@@ -83,7 +41,7 @@ export default function Home() {
     }
   };
 
-  const updateTaskStatuses = async () => {
+  const updateTaskStatuses = useCallback(async () => {
     if (!Array.isArray(todos) || todos.length === 0) return;
     
     const updatedTodos = [...todos]; 
@@ -94,7 +52,7 @@ export default function Home() {
       const autoStatus = getAutoStatus(todo);
       
       if (todo.status !== autoStatus) {
-        console.log(`Updating todo ${todo.id} from ${todo.status} to ${autoStatus}`);
+        if (DEBUG_MODE) console.log(`Updating todo ${todo.id} from ${todo.status} to ${autoStatus}`);
         
         try {
           const updatedTodo = await todoApi.updateTodo(todo.id, { status: autoStatus });
@@ -109,7 +67,66 @@ export default function Home() {
     if (hasChanges) {
       setTodos(updatedTodos);
     }
-  };
+  }, [todos]);
+
+  const forceCheckExpiredTasks = useCallback(async () => {
+    // Only check expired tasks if it's been at least 30 seconds since the last check
+    const now = Date.now();
+    if (now - lastCheckRef.current < 30000) return;
+    
+    if (DEBUG_MODE) console.log("Force checking all tasks for expired status...");
+    if (!Array.isArray(todos) || todos.length === 0) return;
+    
+    lastCheckRef.current = now;
+    const currentDate = new Date();
+    const updatedTodos = [...todos];
+    let hasChanges = false;
+    
+    for (let i = 0; i < updatedTodos.length; i++) {
+      const todo = updatedTodos[i];
+      const deadline = new Date(todo.deadline);
+      
+      if (deadline < currentDate && todo.status === 'ongoing') {
+        if (DEBUG_MODE) console.log(`Found expired task: ${todo.id}, marking as failure`);
+        
+        try {
+          const updatedTodo = await todoApi.updateTodo(todo.id, { status: 'failure' });
+          updatedTodos[i] = updatedTodo;
+          hasChanges = true;
+        } catch (error) {
+          console.error(`Failed to update status for expired todo ${todo.id}:`, error);
+        }
+      }
+    }
+    
+    if (hasChanges) {
+      if (DEBUG_MODE) console.log("Updated expired tasks, refreshing state");
+      setTodos(updatedTodos);
+    }
+  }, [todos]);
+
+  useEffect(() => {
+    const fetchAndUpdate = async () => {
+      await fetchTodos();
+      
+      // Only check expired tasks after initial data load
+      // Don't check repeatedly on every render
+      if (todos.length > 0) {
+        await forceCheckExpiredTasks();
+      }
+    };
+    
+    // Initial fetch
+    fetchAndUpdate();
+    
+    // Set up a reasonable polling interval (every 60 seconds)
+    // to periodically update task statuses
+    const intervalId = setInterval(fetchTodos, 60000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []); // Remove the dependencies to prevent excessive re-renders
 
   const handleCreateTodo = async (todoData: CreateTodoPayload) => {
     try {

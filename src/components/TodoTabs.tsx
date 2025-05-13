@@ -1,6 +1,10 @@
 import { Todo, TodoStatus } from '@/types/todo';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import TodoItem from './TodoItem';
+
+// Set to false to disable excessive console logs (should match value in page.tsx)
+const DEBUG_MODE = false;
+
 interface TodoTabsProps {
   todos: Todo[];
   onUpdate: () => void;
@@ -11,7 +15,9 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('ongoing');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]);
-  const todoArray = Array.isArray(todos) ? todos : [];
+  
+  const todoArray = useMemo(() => Array.isArray(todos) ? todos : [], [todos]);
+  
   useEffect(() => {
     const filtered = todoArray.filter(todo => {
       const matchesTab = activeTab === 'all' || todo.status === activeTab;
@@ -28,17 +34,21 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
     success: todoArray.filter(todo => todo.status === 'success').length,
     failure: todoArray.filter(todo => todo.status === 'failure').length,
   };
-  console.log("Current todo counts:", { 
-    all: tabCounts.all,
-    ongoing: tabCounts.ongoing,
-    success: tabCounts.success,
-    failure: tabCounts.failure,
-    todosWithExpiredDeadline: todoArray.filter(todo => new Date(todo.deadline) < new Date()).length,
-    statusCounts: todoArray.reduce((counts, todo) => {
-      counts[todo.status] = (counts[todo.status] || 0) + 1;
-      return counts;
-    }, {} as Record<string, number>)
-  });
+  
+  if (DEBUG_MODE) {
+    console.log("Current todo counts:", { 
+      all: tabCounts.all,
+      ongoing: tabCounts.ongoing,
+      success: tabCounts.success,
+      failure: tabCounts.failure,
+      todosWithExpiredDeadline: todoArray.filter(todo => new Date(todo.deadline) < new Date()).length,
+      statusCounts: todoArray.reduce((counts, todo) => {
+        counts[todo.status] = (counts[todo.status] || 0) + 1;
+        return counts;
+      }, {} as Record<string, number>)
+    });
+  }
+  
   const handleTabClick = (tab: TabType) => {
     setActiveTab(tab);
   };

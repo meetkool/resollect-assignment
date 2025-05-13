@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { StatusCount } from '@/types/analytics';
 interface StatusDistributionChartProps {
@@ -7,11 +7,13 @@ interface StatusDistributionChartProps {
 }
 const StatusDistributionChart = ({ data }: StatusDistributionChartProps) => {
   const chartRef = useRef<SVGSVGElement>(null);
-  const statusColors: Record<string, string> = {
+  
+  const statusColors = useMemo<Record<string, string>>(() => ({
     ongoing: '#FCD34D', // yellow
     success: '#10B981', // green
     failure: '#EF4444', // red
-  };
+  }), []);
+  
   // Capitalize status text for display
   const formatStatus = (status: string): string => {
     return status.charAt(0).toUpperCase() + status.slice(1);

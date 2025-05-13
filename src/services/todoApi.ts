@@ -1,7 +1,8 @@
 import { CreateTodoPayload, Todo, UpdateTodoPayload } from '@/types/todo';
-// Use the Django backend instead of the local mock API
-const API_URL = 'http://localhost:8000/api';
-// Interface for paginated response from Django REST Framework
+
+// Use the production API URL directly
+const API_URL = 'http://resollect-assignment-254j.onrender.com/api';
+
 interface PaginatedResponse<T> {
   count: number;
   next: string | null;
@@ -16,15 +17,13 @@ export const todoApi = {
       throw new Error('Failed to fetch todos');
     }
     const data = await response.json();
-    // Handle both array responses and paginated responses
     if (Array.isArray(data)) {
       return data;
     } else if (data && typeof data === 'object' && 'results' in data) {
-      // This is a paginated response from Django REST Framework
       return (data as PaginatedResponse<Todo>).results;
     } else {
       console.error('Unexpected response format:', data);
-      return []; // Return empty array as fallback
+      return []; 
     }
   },
   async getTodo(id: string): Promise<Todo> {

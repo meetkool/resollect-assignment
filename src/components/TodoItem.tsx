@@ -3,6 +3,9 @@ import { formatDeadline, getTimeRemainingText } from '@/utils/todoUtils';
 import { useState } from 'react';
 import { todoApi } from '@/services/todoApi';
 
+// Set to false to disable excessive console logs
+const DEBUG_MODE = false;
+
 interface TodoItemProps {
   todo: Todo;
   onUpdate: () => void;
@@ -13,7 +16,9 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  console.log(`TodoItem: ${todo.id}, title: ${todo.title}, status: ${todo.status}, deadline: ${todo.deadline}, isExpired: ${new Date(todo.deadline) < new Date()}`);
+  if (DEBUG_MODE) {
+    console.log(`TodoItem: ${todo.id}, title: ${todo.title}, status: ${todo.status}, deadline: ${todo.deadline}, isExpired: ${new Date(todo.deadline) < new Date()}`);
+  }
 
   const handleMarkComplete = async () => {
     if (todo.status === 'success') return;
@@ -37,17 +42,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
       console.error('Failed to delete todo:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const getStatusClass = () => {
-    switch (todo.status) {
-      case 'success':
-        return 'todo-item-success';
-      case 'failure':
-        return 'todo-item-failure';
-      default:
-        return 'todo-item-ongoing';
     }
   };
 
@@ -104,13 +98,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
         {todo.priority}
       </span>
     );
-  };
-
-  const getTimeRemainingStyles = () => {
-    const isExpired = new Date(todo.deadline) < new Date();
-    if (todo.status === 'success') return 'text-green-600';
-    if (isExpired) return 'text-red-600';
-    return 'text-blue-600';
   };
 
   return (

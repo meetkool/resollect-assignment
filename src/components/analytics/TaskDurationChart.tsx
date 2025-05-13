@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { AnalyticsDurationAnalysis, DurationData } from '@/types/analytics';
+import { AnalyticsDurationAnalysis } from '@/types/analytics';
 interface TaskDurationChartProps {
   data: AnalyticsDurationAnalysis;
 }
@@ -128,7 +128,7 @@ const TaskDurationChart = ({ data }: TaskDurationChartProps) => {
       .style('text-anchor', 'middle')
       .style('font-size', '12px')
       .text('Number of Tasks');
-  }, [data]);
+  }, [data, statusColors]);
   return (
     <div className="w-full h-full">
       <svg ref={chartRef} className="w-full h-full" />
