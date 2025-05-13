@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-TODO-REPLACE-IN-PRODUCTION')
 DEBUG = env.bool('DEBUG', default=True)
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['resollect-assignment-254j.onrender.com', 'localhost', '127.0.0.1']
 NEXT_PUBLIC_STACK_PROJECT_ID = env('NEXT_PUBLIC_STACK_PROJECT_ID', default='c2024aa6-78a7-47a2-8da7-42029ddbcfe6')
 NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = env('NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY', default='pck_g01tghqg3jr2taj6dzvzcxr8a41ddbm8tzbe9f0q8wpa0')
 STACK_SECRET_SERVER_KEY = env('STACK_SECRET_SERVER_KEY', default='ssk_sj0r5nms7jsabvrz145ms0zs1cnsp57p7tzsmhpf1v1b0')
