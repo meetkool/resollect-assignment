@@ -7,13 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "backend": "cd backend && .\\venv\\Scripts\\activate && python manage.py runserver",
+    "backend": "powershell -ExecutionPolicy Bypass -File .\\scripts\\start-backend.ps1",
     "migrate": "cd backend && .\\venv\\Scripts\\activate && python manage.py migrate",
-    "update-statuses": "cd backend && .\\venv\\Scripts\\activate && python manage.py update_todo_statuses"
+    "update-statuses": "cd backend && .\\venv\\Scripts\\activate && python manage.py update_todo_statuses",
+    "addtasks": "node scripts/generate-tasks.mjs",
+    "cleanup": "powershell -ExecutionPolicy Bypass -File .\\scripts\\remove-comments.ps1"
   },
   "dependencies": {
+    "@types/d3": "^7.4.3",
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.21",
+    "d3": "^7.9.0",
     "next": "15.3.2",
     "postcss": "^8.5.3",
     "react": "^19.0.0",

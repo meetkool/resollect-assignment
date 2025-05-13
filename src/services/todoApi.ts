@@ -1,8 +1,6 @@
 import { CreateTodoPayload, Todo, UpdateTodoPayload } from '@/types/todo';
-
 // Use the Django backend instead of the local mock API
 const API_URL = 'http://localhost:8000/api';
-
 // Interface for paginated response from Django REST Framework
 interface PaginatedResponse<T> {
   count: number;
@@ -10,7 +8,6 @@ interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
-
 export const todoApi = {
   async getTodos(): Promise<Todo[]> {
     // Add no_page=true to get unpaginated results
@@ -18,9 +15,7 @@ export const todoApi = {
     if (!response.ok) {
       throw new Error('Failed to fetch todos');
     }
-    
     const data = await response.json();
-    
     // Handle both array responses and paginated responses
     if (Array.isArray(data)) {
       return data;
@@ -32,7 +27,6 @@ export const todoApi = {
       return []; // Return empty array as fallback
     }
   },
-
   async getTodo(id: string): Promise<Todo> {
     const response = await fetch(`${API_URL}/todos/${id}/`);
     if (!response.ok) {
@@ -40,7 +34,6 @@ export const todoApi = {
     }
     return response.json();
   },
-
   async createTodo(todo: CreateTodoPayload): Promise<Todo> {
     const response = await fetch(`${API_URL}/todos/`, {
       method: 'POST',
@@ -54,7 +47,6 @@ export const todoApi = {
     }
     return response.json();
   },
-
   async updateTodo(id: string, todo: UpdateTodoPayload): Promise<Todo> {
     const response = await fetch(`${API_URL}/todos/${id}/`, {
       method: 'PATCH',
@@ -68,16 +60,16 @@ export const todoApi = {
     }
     return response.json();
   },
-
   async deleteTodo(id: string): Promise<void> {
     const response = await fetch(`${API_URL}/todos/${id}/`, {
       method: 'DELETE',
     });
-    if (!response.ok) {
+    // Consider both 204 (successful deletion) and 404 (already deleted) as success
+    // This prevents errors when React StrictMode causes the function to be called twice
+    if (!response.ok && response.status !== 404) {
       throw new Error(`Failed to delete todo with id ${id}`);
     }
   },
-
   async markTodoComplete(id: string): Promise<Todo> {
     const response = await fetch(`${API_URL}/todos/${id}/mark_complete/`, {
       method: 'PATCH',

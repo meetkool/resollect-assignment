@@ -1,40 +1,31 @@
 import { Todo, TodoStatus } from '@/types/todo';
 import { useState, useEffect } from 'react';
 import TodoItem from './TodoItem';
-
 interface TodoTabsProps {
   todos: Todo[];
   onUpdate: () => void;
   onDelete: (id: string) => void;
 }
-
 type TabType = 'all' | TodoStatus;
-
 export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [activeTab, setActiveTab] = useState<TabType>('ongoing');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]);
-
   // Ensure todos is actually an array before filtering
   const todoArray = Array.isArray(todos) ? todos : [];
-
   // Filter todos based on both active tab and search term
   useEffect(() => {
     const filtered = todoArray.filter(todo => {
       // First filter by tab
       const matchesTab = activeTab === 'all' || todo.status === activeTab;
-      
       // Then filter by search term
       const matchesSearch = searchTerm === '' || 
         todo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         todo.description.toLowerCase().includes(searchTerm.toLowerCase());
-      
       return matchesTab && matchesSearch;
     });
-    
     setFilteredTodos(filtered);
   }, [todoArray, activeTab, searchTerm]);
-
   // Calculate tab counts safely
   const tabCounts = {
     all: todoArray.length,
@@ -42,7 +33,6 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
     success: todoArray.filter(todo => todo.status === 'success').length,
     failure: todoArray.filter(todo => todo.status === 'failure').length,
   };
-  
   // Debug output for task counts
   console.log("Current todo counts:", { 
     all: tabCounts.all,
@@ -55,15 +45,12 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
       return counts;
     }, {} as Record<string, number>)
   });
-
   const handleTabClick = (tab: TabType) => {
     setActiveTab(tab);
   };
-
   const getTabClasses = (tab: TabType) => {
     return `filter-tab ${activeTab === tab ? 'filter-tab-active' : 'filter-tab-inactive'}`;
   };
-
   return (
     <div className="space-y-6">
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-md">
@@ -90,22 +77,8 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
             </button>
           )}
         </div>
-        
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-sm text-gray-500 mr-2">Filter:</span>
-          <button 
-            onClick={() => handleTabClick('all')} 
-            className={getTabClasses('all')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
-            All
-            <span className="badge badge-gray">
-              {tabCounts.all}
-            </span>
-          </button>
-          
           <button 
             onClick={() => handleTabClick('ongoing')} 
             className={getTabClasses('ongoing')}
@@ -118,7 +91,18 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
               {tabCounts.ongoing}
             </span>
           </button>
-          
+          <button 
+            onClick={() => handleTabClick('all')} 
+            className={getTabClasses('all')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            All
+            <span className="badge badge-gray">
+              {tabCounts.all}
+            </span>
+          </button>
           <button 
             onClick={() => handleTabClick('success')} 
             className={getTabClasses('success')}
@@ -131,7 +115,6 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
               {tabCounts.success}
             </span>
           </button>
-          
           <button 
             onClick={() => handleTabClick('failure')} 
             className={getTabClasses('failure')}
@@ -146,7 +129,6 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
           </button>
         </div>
       </div>
-
       <div className="space-y-4">
         {filteredTodos.length === 0 ? (
           <div className="text-center py-10 bg-gray-50 rounded-xl border border-gray-200 text-gray-500">

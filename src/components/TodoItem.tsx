@@ -2,23 +2,18 @@ import { Todo } from '@/types/todo';
 import { formatDeadline, getTimeRemainingText } from '@/utils/todoUtils';
 import { useState } from 'react';
 import { todoApi } from '@/services/todoApi';
-
 interface TodoItemProps {
   todo: Todo;
   onUpdate: () => void;
   onDelete: () => void;
 }
-
 export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  
   // Debug info for this item
   console.log(`TodoItem: ${todo.id}, title: ${todo.title}, status: ${todo.status}, deadline: ${todo.deadline}, isExpired: ${new Date(todo.deadline) < new Date()}`);
-
   const handleMarkComplete = async () => {
     if (todo.status === 'success') return;
-    
     try {
       setIsLoading(true);
       await todoApi.markTodoComplete(todo.id);
@@ -29,7 +24,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
       setIsLoading(false);
     }
   };
-
   const handleDelete = async () => {
     try {
       setIsLoading(true);
@@ -41,7 +35,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
       setIsLoading(false);
     }
   };
-
   // Get the appropriate CSS class based on status
   const getStatusClass = () => {
     switch (todo.status) {
@@ -53,7 +46,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
         return 'todo-item-ongoing';
     }
   };
-
   // Get appropriate status badge
   const getStatusBadge = () => {
     switch (todo.status) {
@@ -86,7 +78,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
         );
     }
   };
-
   // Determine time remaining styling
   const getTimeRemainingStyles = () => {
     const isExpired = new Date(todo.deadline) < new Date();
@@ -94,7 +85,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
     if (isExpired) return 'text-red-600';
     return 'text-blue-600';
   };
-
   return (
     <div style={{ 
       padding: '1.25rem',
@@ -112,7 +102,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
             <h3 style={{ fontWeight: '600', fontSize: '1.125rem' }}>{todo.title}</h3>
             {getStatusBadge()}
           </div>
-          
           <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
             <span style={{ color: '#6b7280', display: 'flex', alignItems: 'center' }}>
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px', marginRight: '6px' }}>
@@ -133,7 +122,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
               {getTimeRemainingText(todo.deadline)}
             </span>
           </div>
-          
           {todo.description && (
             <div style={{ marginTop: '0.75rem' }}>
               <button 
@@ -181,7 +169,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
             </div>
           )}
         </div>
-        
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           {todo.status !== 'success' && todo.status !== 'failure' && (
             <button

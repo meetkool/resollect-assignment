@@ -1,0 +1,270 @@
+{
+	"info": {
+		"_postman_id": "f5b68d85-3a87-4f99-b15c-c2b9d90e548e",
+		"name": "Todo API",
+		"description": "API collection for the Django Todo app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All Todos",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/todos/?no_page=true",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						""
+					],
+					"query": [
+						{
+							"key": "no_page",
+							"value": "true",
+							"description": "Disable pagination"
+						}
+					]
+				},
+				"description": "Get a list of all todos"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Todo by ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/todos/:id/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						":id",
+						""
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "",
+							"description": "Todo ID (UUID)"
+						}
+					]
+				},
+				"description": "Get a specific todo by ID"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Todo",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Test Todo\",\n    \"description\": \"This is a test todo created via Postman\",\n    \"deadline\": \"2024-12-31T23:59:59Z\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/todos/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						""
+					]
+				},
+				"description": "Create a new todo"
+			},
+			"response": []
+		},
+		{
+			"name": "Update Todo",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Updated Todo Title\",\n    \"description\": \"Updated description\",\n    \"status\": \"ongoing\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/todos/:id/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						":id",
+						""
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "",
+							"description": "Todo ID (UUID)"
+						}
+					]
+				},
+				"description": "Update a specific todo"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Todo",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/todos/:id/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						":id",
+						""
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "",
+							"description": "Todo ID (UUID)"
+						}
+					]
+				},
+				"description": "Delete a specific todo"
+			},
+			"response": []
+		},
+		{
+			"name": "Mark Todo as Complete",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/todos/:id/mark_complete/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						":id",
+						"mark_complete",
+						""
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "",
+							"description": "Todo ID (UUID)"
+						}
+					]
+				},
+				"description": "Mark a specific todo as complete"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Ongoing Todos",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/todos/ongoing/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						"ongoing",
+						""
+					]
+				},
+				"description": "Get all ongoing todos"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Completed Todos",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/todos/success/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						"success",
+						""
+					]
+				},
+				"description": "Get all completed todos"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Failed Todos",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/todos/failure/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"todos",
+						"failure",
+						""
+					]
+				},
+				"description": "Get all failed todos"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string",
+			"description": "Base URL for the API"
+		}
+	]
+} 

@@ -1,21 +1,18 @@
 export type TodoStatus = 'ongoing' | 'success' | 'failure';
-
 export interface Todo {
   id: string;
   title: string;
   description: string;
-  deadline: string; // ISO timestamp
+  deadline: string; 
   status: TodoStatus;
-  createdAt: string; // timestamp
-  updatedAt: string; // timestamp
+  createdAt: string; 
+  updatedAt: string; 
 }
-
 export interface CreateTodoPayload {
   title: string;
   description: string;
   deadline: string; // ISO timestamp
 }
-
 export interface UpdateTodoPayload {
   title?: string;
   description?: string;

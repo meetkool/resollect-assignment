@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 @layer base {
   :root {
     --background: 210 40% 98%;
@@ -24,20 +23,15 @@
     --radius: 0.75rem;
   }
 }
-
-/* Basic styles */
 body {
   background: white;
   color: #333;
   font-family: Arial, sans-serif;
 }
-
-/* Search bar styles */
 .search-container {
   position: relative;
   margin-bottom: 1.25rem;
 }
-
 .search-input {
   width: 100%;
   padding: 0.75rem 0.75rem 0.75rem 2.75rem;
@@ -49,17 +43,14 @@ body {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   outline: none;
 }
-
 .search-input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
-
 .search-input::placeholder {
   color: #9ca3af;
   opacity: 1;
 }
-
 .search-icon {
   position: absolute;
   left: 0.75rem;
@@ -70,7 +61,6 @@ body {
   height: 1.25rem;
   pointer-events: none;
 }
-
 .search-clear {
   position: absolute;
   right: 0.75rem;
@@ -89,13 +79,10 @@ body {
   border-radius: 50%;
   transition: all 0.2s ease;
 }
-
 .search-clear:hover {
   background-color: #f3f4f6;
   color: #4b5563;
 }
-
-/* Filter tabs */
 .filter-tab {
   display: inline-flex;
   align-items: center;
@@ -106,25 +93,20 @@ body {
   font-weight: 500;
   transition: all 0.2s ease;
 }
-
 .filter-tab-active {
   background-color: #eff6ff;
   color: #3b82f6;
   border: 1px solid #dbeafe;
 }
-
 .filter-tab-inactive {
   background-color: white;
   color: #6b7280;
   border: 1px solid #e5e7eb;
 }
-
 .filter-tab-inactive:hover {
   background-color: #f9fafb;
   border-color: #d1d5db;
 }
-
-/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -135,28 +117,22 @@ body {
   border-radius: 0.375rem;
   min-width: 1.25rem;
 }
-
 .badge-gray {
   background-color: #f3f4f6;
   color: #4b5563;
 }
-
 .badge-blue {
   background-color: #dbeafe;
   color: #2563eb;
 }
-
 .badge-green {
   background-color: #dcfce7;
   color: #16a34a;
 }
-
 .badge-red {
   background-color: #fee2e2;
   color: #dc2626;
 }
-
-/* Button styles */
 .btn {
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
@@ -166,13 +142,11 @@ body {
   align-items: center;
   justify-content: center;
 }
-
 .btn-secondary {
   background-color: #f3f4f6;
   color: #4b5563;
   border: 1px solid #e5e7eb;
 }
-
 .btn-secondary:hover {
   background-color: #e5e7eb;
 }

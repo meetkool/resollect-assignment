@@ -1,47 +1,37 @@
 import { CreateTodoPayload } from '@/types/todo';
 import { useState } from 'react';
-
 interface TodoFormProps {
   onSubmit: (todo: CreateTodoPayload) => Promise<void>;
 }
-
 export default function TodoForm({ onSubmit }: TodoFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [showSuccess, setShowSuccess] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     // Simple validation
     if (!title.trim()) {
       setError('Title is required');
       return;
     }
-    
     if (!deadline) {
       setError('Deadline is required');
       return;
     }
-    
     try {
       setIsLoading(true);
       setError(null);
-      
       await onSubmit({
         title: title.trim(),
         description: description.trim(),
         deadline: new Date(deadline).toISOString(),
       });
-      
       // Show success message
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-      
       // Reset form
       setTitle('');
       setDescription('');
@@ -53,7 +43,6 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="card bg-white shadow-lg border-t-4 border-t-primary" style={{ padding: '1.5rem' }}>
       <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center">
@@ -62,7 +51,6 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
         </svg>
         Add New Task
       </h2>
-      
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {error && (
           <div style={{ padding: '0.875rem', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '0.5rem', border: '1px solid #fecaca', display: 'flex', alignItems: 'flex-start' }}>
@@ -72,7 +60,6 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
             {error}
           </div>
         )}
-        
         {showSuccess && (
           <div style={{ padding: '0.875rem', backgroundColor: '#dcfce7', color: '#16a34a', borderRadius: '0.5rem', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'flex-start' }}>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '20px', height: '20px', marginRight: '8px', flexShrink: 0, marginTop: '2px' }}>
@@ -81,7 +68,6 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
             Task added successfully!
           </div>
         )}
-        
         <div>
           <label htmlFor="title" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.375rem' }}>
             Title <span style={{ color: '#ef4444' }}>*</span>
@@ -95,7 +81,6 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
             placeholder="What needs to be done?"
           />
         </div>
-        
         <div>
           <label htmlFor="description" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.375rem' }}>
             Description
@@ -109,7 +94,6 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
             rows={3}
           />
         </div>
-        
         <div>
           <label htmlFor="deadline" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.375rem' }}>
             Deadline <span style={{ color: '#ef4444' }}>*</span>
@@ -123,7 +107,6 @@ export default function TodoForm({ onSubmit }: TodoFormProps) {
             min={new Date().toISOString().slice(0, 16)}
           />
         </div>
-        
         <button
           type="submit"
           disabled={isLoading}
