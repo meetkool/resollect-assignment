@@ -18,7 +18,6 @@ class TodoViewSet(viewsets.ModelViewSet):
     serializer_class = TodoSerializer
     pagination_class = StandardResultsSetPagination
     def get_queryset(self):
-        update_todo_statuses()
         queryset = Todo.objects.all()
         if 'no_page' in self.request.query_params:
             self.pagination_class = None
@@ -32,7 +31,6 @@ class TodoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     @action(detail=False, methods=['get'])
     def ongoing(self, request):
-        update_todo_statuses()
         todos = Todo.objects.filter(status='ongoing')
         serializer = self.get_serializer(todos, many=True)
         return Response(serializer.data)
@@ -43,7 +41,6 @@ class TodoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     @action(detail=False, methods=['get'])
     def failure(self, request):
-        update_todo_statuses()
         todos = Todo.objects.filter(status='failure')
         serializer = self.get_serializer(todos, many=True)
         return Response(serializer.data)
