@@ -7,7 +7,6 @@ interface StatusDistributionChartProps {
 }
 const StatusDistributionChart = ({ data }: StatusDistributionChartProps) => {
   const chartRef = useRef<SVGSVGElement>(null);
-  // Define colors for each status
   const statusColors: Record<string, string> = {
     ongoing: '#FCD34D', // yellow
     success: '#10B981', // green

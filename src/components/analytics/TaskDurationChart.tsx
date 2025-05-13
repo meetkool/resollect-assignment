@@ -13,7 +13,6 @@ const TaskDurationChart = ({ data }: TaskDurationChartProps) => {
     success: '#10B981', // green
     failure: '#EF4444', // red
   };
-  // Formatting labels for duration ranges
   const formatDurationRange = (key: string): string => {
     switch(key) {
       case 'short': return 'Short (< 1 day)';
