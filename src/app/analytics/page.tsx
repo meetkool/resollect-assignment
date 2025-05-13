@@ -18,13 +18,11 @@ export default function AnalyticsDashboard() {
       try {
         setLoading(true);
         setError(null);
-        // Fetch all analytics data with Promise.allSettled to handle partial failures
         const results = await Promise.allSettled([
           analyticsApi.getCompletionStats(),
           analyticsApi.getProductivityPatterns(),
           analyticsApi.getDurationAnalysis()
         ]);
-        // Process each result individually
         if (results[0].status === 'fulfilled') {
           setCompletionStats(results[0].value);
         } else {
@@ -40,7 +38,6 @@ export default function AnalyticsDashboard() {
         } else {
           console.error('Error fetching duration analysis:', results[2].reason);
         }
-        // Only show error if all requests failed
         if (results.every(result => result.status === 'rejected')) {
           setError('Failed to load any analytics data. Please try again later.');
         } else if (results.some(result => result.status === 'rejected')) {
@@ -70,7 +67,7 @@ export default function AnalyticsDashboard() {
       </div>
     );
   }
-  // Calculate the overall success rate
+  // Calculate the  success rate
   const successRate = completionStats?.status_distribution.find(item => item.status === 'success')?.count || 0;
   const totalTasks = completionStats?.status_distribution.reduce((sum, item) => sum + item.count, 0) || 0;
   const overallSuccessRate = totalTasks > 0 ? Math.round((successRate / totalTasks) * 100) : 0;

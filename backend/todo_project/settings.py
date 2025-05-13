@@ -2,24 +2,16 @@ import os
 from environ import Env
 import dj_database_url
 from pathlib import Path
-# Initialize environment variables
 env = Env()
-# Read environment variables from .env file
 Env.read_env()
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-# SECURITY WARNING: keep the secret key used in production secret!
+
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-TODO-REPLACE-IN-PRODUCTION')
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 ALLOWED_HOSTS = []
-# Stack Auth Configuration
 NEXT_PUBLIC_STACK_PROJECT_ID = env('NEXT_PUBLIC_STACK_PROJECT_ID', default='c2024aa6-78a7-47a2-8da7-42029ddbcfe6')
 NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = env('NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY', default='pck_g01tghqg3jr2taj6dzvzcxr8a41ddbm8tzbe9f0q8wpa0')
 STACK_SECRET_SERVER_KEY = env('STACK_SECRET_SERVER_KEY', default='ssk_sj0r5nms7jsabvrz145ms0zs1cnsp57p7tzsmhpf1v1b0')
-# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -83,8 +75,7 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -99,17 +90,14 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
 STATIC_URL = 'static/'
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST Framework settings
 REST_FRAMEWORK = {

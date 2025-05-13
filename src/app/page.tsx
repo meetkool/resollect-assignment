@@ -12,7 +12,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch todos on component mount
   useEffect(() => {
     const fetchAndUpdate = async () => {
       await fetchTodos();
@@ -21,35 +20,29 @@ export default function Home() {
     
     fetchAndUpdate();
     
-    // Set up an interval to check and update task statuses based on deadlines
-    const intervalId = setInterval(updateTaskStatuses, 10000); // every 10 seconds
+    const intervalId = setInterval(updateTaskStatuses, 10000);
     
     return () => {
       clearInterval(intervalId);
     };
   }, []);
 
-  // Force check all tasks for expired status
   const forceCheckExpiredTasks = async () => {
     console.log("Force checking all tasks for expired status...");
-    // Safety check - if no todos, don't try to update
     if (!Array.isArray(todos) || todos.length === 0) return;
     
     const now = new Date();
     const updatedTodos = [...todos];
     let hasChanges = false;
     
-    // Check each todo for expired deadline
     for (let i = 0; i < updatedTodos.length; i++) {
       const todo = updatedTodos[i];
       const deadline = new Date(todo.deadline);
       
-      // If deadline has passed and status is still 'ongoing'
       if (deadline < now && todo.status === 'ongoing') {
         console.log(`Found expired task: ${todo.id}, marking as failure`);
         
         try {
-          // Update in the backend
           const updatedTodo = await todoApi.updateTodo(todo.id, { status: 'failure' });
           updatedTodos[i] = updatedTodo;
           hasChanges = true;
@@ -72,10 +65,8 @@ export default function Home() {
       
       const data = await todoApi.getTodos();
       
-      // Log the data structure for debugging
       console.log("API response data:", data);
       
-      // Ensure we're getting an array back
       if (Array.isArray(data)) {
         setTodos(data);
       } else {
@@ -86,32 +77,28 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to fetch todos:', error);
       setError('Failed to load tasks. Please try refreshing the page.');
-      setTodos([]); // Ensure todos is always an array
+      setTodos([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateTaskStatuses = async () => {
-    // Safety check - if no todos, don't try to update
     if (!Array.isArray(todos) || todos.length === 0) return;
     
-    // Check each todo and update if needed
-    const updatedTodos = [...todos]; // Create a copy to avoid mutation issues
+    const updatedTodos = [...todos]; 
     let hasChanges = false;
     
     for (let i = 0; i < updatedTodos.length; i++) {
       const todo = updatedTodos[i];
       const autoStatus = getAutoStatus(todo);
       
-      // If status needs changing due to deadline passing
       if (todo.status !== autoStatus) {
         console.log(`Updating todo ${todo.id} from ${todo.status} to ${autoStatus}`);
         
         try {
-          // Update in the backend
           const updatedTodo = await todoApi.updateTodo(todo.id, { status: autoStatus });
-          updatedTodos[i] = updatedTodo; // Use the returned updated todo
+          updatedTodos[i] = updatedTodo; 
           hasChanges = true;
         } catch (error) {
           console.error(`Failed to update status for todo ${todo.id}:`, error);
@@ -119,7 +106,6 @@ export default function Home() {
       }
     }
     
-    // Only update state if changes were made
     if (hasChanges) {
       setTodos(updatedTodos);
     }
@@ -132,7 +118,7 @@ export default function Home() {
       setTodos(prevTodos => Array.isArray(prevTodos) ? [newTodo, ...prevTodos] : [newTodo]);
     } catch (error) {
       console.error('Failed to create todo:', error);
-      throw error; // Rethrow to handle in the form
+      throw error; 
     }
   };
 

@@ -33,7 +33,7 @@ class Todo(models.Model):
     updatedAt = models.DateTimeField(auto_now=True)
     
     class Meta:
-        ordering = ['-createdAt']  # Sort by created date, newest first
+        ordering = ['-createdAt'] 
     
     def __str__(self):
         return self.title

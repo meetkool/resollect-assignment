@@ -1,6 +1,5 @@
 const fetch = require('node-fetch');
 const API_URL = 'http://localhost:8000/api';
-// Generate a date object for a relative deadline (e.g., +1 day, -2 hours)
 function getRelativeDate(days = 0, hours = 0, minutes = 0) {
   const date = new Date();
   date.setDate(date.getDate() + days);
@@ -8,74 +7,69 @@ function getRelativeDate(days = 0, hours = 0, minutes = 0) {
   date.setMinutes(date.getMinutes() + minutes);
   return date.toISOString();
 }
-// Sample tasks with various deadlines
 const sampleTasks = [
-  // Ongoing tasks (future deadlines)
   {
     title: "Complete project documentation",
     description: "Write comprehensive documentation for the current project",
-    deadline: getRelativeDate(3), // 3 days from now
+    deadline: getRelativeDate(3),
     status: "ongoing"
   },
   {
     title: "Prepare presentation slides",
     description: "Create slides for the upcoming client meeting",
-    deadline: getRelativeDate(1, 2), // 1 day and 2 hours from now
+    deadline: getRelativeDate(1, 2),
     status: "ongoing"
   },
   {
     title: "Review pull requests",
     description: "Check and review open PRs from the development team",
-    deadline: getRelativeDate(0, 3), // 3 hours from now
+    deadline: getRelativeDate(0, 3),
     status: "ongoing"
   },
   {
     title: "Send weekly report",
     description: "Compile and send the weekly progress report to the manager",
-    deadline: getRelativeDate(0, 1, 30), // 1 hour 30 minutes from now
+    deadline: getRelativeDate(0, 1, 30),
     status: "ongoing"
   },
-  // Completed tasks (set as success regardless of deadline)
   {
     title: "Fix login bug",
     description: "Resolve the authentication issue reported by users",
-    deadline: getRelativeDate(-1), // 1 day ago
+    deadline: getRelativeDate(-1),
     status: "success"
   },
   {
     title: "Update dependencies",
     description: "Update project dependencies to the latest versions",
-    deadline: getRelativeDate(2), // 2 days from now (completed early)
+    deadline: getRelativeDate(2), 
     status: "success"
   },
-  // Failed tasks (past deadlines, marked as failures)
+  
   {
     title: "Submit expense report",
     description: "Complete and submit the monthly expense report",
-    deadline: getRelativeDate(-2), // 2 days ago
+    deadline: getRelativeDate(-2), 
     status: "failure"
   },
   {
     title: "Complete code review",
     description: "Review the code for the new feature implementation",
-    deadline: getRelativeDate(-1, -4), // 1 day 4 hours ago
+    deadline: getRelativeDate(-1, -4),
     status: "failure"
   },
-  // Tasks that will expire soon (for testing expiration)
   {
     title: "URGENT: Deploy hotfix",
     description: "Deploy critical bugfix to production",
-    deadline: getRelativeDate(0, 0, 10), // 10 minutes from now
+    deadline: getRelativeDate(0, 0, 10), 
     status: "ongoing"
   },
   {
     title: "Call client about project extension",
     description: "Discuss project timeline extension with the client",
-    deadline: getRelativeDate(0, 0, 15), // 15 minutes from now
+    deadline: getRelativeDate(0, 0, 15), 
     status: "ongoing"
   }
 ];
-// Function to add a task to the application
 async function addTask(task) {
   try {
     const response = await fetch(`${API_URL}/todos/`, {
@@ -96,17 +90,14 @@ async function addTask(task) {
     return null;
   }
 }
-// Main function to add all sample tasks
 async function addSampleTasks() {
   console.log('🚀 Starting task generation...');
   console.log(`📋 Adding ${sampleTasks.length} sample tasks to the application`);
-  // Add tasks sequentially to maintain order and prevent rate limiting
   for (const task of sampleTasks) {
     await addTask(task);
   }
   console.log('✨ Task generation completed!');
 }
-// Run the task generator
 addSampleTasks().catch(error => {
   console.error('Failed to generate tasks:', error);
   process.exit(1);
