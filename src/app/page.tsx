@@ -3,11 +3,11 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Todo, CreateTodoPayload } from '@/types/todo';
 import { todoApi } from '@/services/todoApi';
+import { websocketService } from '@/services/websocketService';
 import TodoForm from '@/components/TodoForm';
 import TodoTabs from '@/components/TodoTabs';
 import { Loader2, Mail, Plus } from 'lucide-react';
 
-// Set to false to disable excessive console logs
 const DEBUG_MODE = false;
 
 export default function Home() {
@@ -16,7 +16,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const lastCheckRef = useRef<number>(0);
   const [showForm, setShowForm] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
+  // Fetch todos from the REST API
   const fetchTodos = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -42,69 +44,116 @@ export default function Home() {
     }
   }, []);
 
-  const forceCheckExpiredTasks = useCallback(async () => {
-    // Only check expired tasks if it's been at least 30 seconds since the last check
-    const now = Date.now();
-    if (now - lastCheckRef.current < 30000) return;
-    
-    if (DEBUG_MODE) console.log("Force checking all tasks for expired status...");
-    if (!Array.isArray(todos) || todos.length === 0) return;
-    
-    lastCheckRef.current = now;
-    const currentDate = new Date();
-    const updatedTodos = [...todos];
-    let hasChanges = false;
-    
-    for (let i = 0; i < updatedTodos.length; i++) {
-      const todo = updatedTodos[i];
-      const deadline = new Date(todo.deadline);
-      
-      if (deadline < currentDate && todo.status === 'ongoing') {
-        if (DEBUG_MODE) console.log(`Found expired task: ${todo.id}, marking as failure`);
-        
-        try {
-          const updatedTodo = await todoApi.updateTodo(todo.id, { status: 'failure' });
-          updatedTodos[i] = updatedTodo;
-          hasChanges = true;
-        } catch (error) {
-          console.error(`Failed to update status for expired todo ${todo.id}:`, error);
-        }
-      }
-    }
-    
-    if (hasChanges) {
-      if (DEBUG_MODE) console.log("Updated expired tasks, refreshing state");
-      setTodos(updatedTodos);
-    }
-  }, [todos]);
-
+  // Set up polling as fallback if WebSockets aren't available
   useEffect(() => {
-    // Only fetch on initial render, not on every render
-    fetchTodos();
+    let intervalId: NodeJS.Timeout | null = null;
     
-    // Set up a reasonable polling interval (every 60 seconds)
-    // to periodically update task statuses
-    const intervalId = setInterval(fetchTodos, 60000);
+    if (!isConnected) {
+      intervalId = setInterval(() => {
+        if (!isConnected) {
+          if (DEBUG_MODE) console.log("Polling for todo updates");
+          fetchTodos();
+        }
+      }, 10000);
+    }
     
     return () => {
-      clearInterval(intervalId);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, [fetchTodos]); // Add fetchTodos as a dependency since it's used in useEffect
+  }, [fetchTodos, isConnected]);
 
-  // Run forceCheckExpiredTasks in a separate useEffect that depends on todos.length
   useEffect(() => {
-    if (todos.length > 0) {
-      forceCheckExpiredTasks();
-    }
-  }, [todos.length, forceCheckExpiredTasks]);
+    websocketService.connect();
+
+    const connectUnsubscribe = websocketService.subscribe('connect', () => {
+      setIsConnected(true);
+      setIsLoading(false);
+      setError(null); 
+      
+
+      websocketService.requestTodos();
+    });
+
+    const disconnectUnsubscribe = websocketService.subscribe('disconnect', () => {
+      if (isConnected) {
+        setIsConnected(false);
+        fetchTodos();
+      }
+    });
+
+    const todoListUnsubscribe = websocketService.subscribe('todo_list', (data) => {
+      if (DEBUG_MODE) console.log('Received todo list:', data);
+      if (Array.isArray(data.todos)) {
+        setTodos(data.todos);
+        setIsLoading(false);
+      }
+    });
+
+    const todoCreateUnsubscribe = websocketService.subscribe('todo_create', (data) => {
+      if (DEBUG_MODE) console.log('Todo created:', data);
+      setTodos(prevTodos => {
+        if (!Array.isArray(prevTodos)) return [data.todo];
+        return [data.todo, ...prevTodos];
+      });
+    });
+
+    const todoUpdateUnsubscribe = websocketService.subscribe('todo_update', (data) => {
+      if (DEBUG_MODE) console.log('Todo updated:', data);
+      setTodos(prevTodos => {
+        if (!Array.isArray(prevTodos)) return [data.todo];
+        return prevTodos.map(todo => 
+          todo.id === data.todo.id ? data.todo : todo
+        );
+      });
+    });
+
+    const todoDeleteUnsubscribe = websocketService.subscribe('todo_delete', (data) => {
+      if (DEBUG_MODE) console.log('Todo deleted:', data);
+      setTodos(prevTodos => {
+        if (!Array.isArray(prevTodos)) return [];
+        return prevTodos.filter(todo => todo.id !== data.todo_id);
+      });
+    });
+
+    const errorUnsubscribe = websocketService.subscribe('error', (data) => {
+      console.error('WebSocket error:', data);
+      
+      if (!isConnected) {
+        fetchTodos();
+      }
+    });
+
+    return () => {
+      connectUnsubscribe();
+      disconnectUnsubscribe();
+      todoListUnsubscribe();
+      todoCreateUnsubscribe();
+      todoUpdateUnsubscribe();
+      todoDeleteUnsubscribe();
+      errorUnsubscribe();
+      websocketService.disconnect();
+    };
+  }, [fetchTodos, isConnected]);
+
+  // Fetch todos on initial render
+  useEffect(() => {
+    fetchTodos();
+  }, [fetchTodos]);
 
   const handleCreateTodo = async (todoData: CreateTodoPayload) => {
     try {
       const newTodo = await todoApi.createTodo(todoData);
       console.log("Created todo:", newTodo);
-      setTodos(prevTodos => Array.isArray(prevTodos) ? [newTodo, ...prevTodos] : [newTodo]);
+      
+
+      if (!isConnected) {
+        setTodos(prevTodos => Array.isArray(prevTodos) ? [newTodo, ...prevTodos] : [newTodo]);
+      }
+      
       if (window.innerWidth < 1024) {
-        setShowForm(false); // Close form after submitting on mobile
+        setShowForm(false); 
       }
     } catch (error) {
       console.error('Failed to create todo:', error);
@@ -115,16 +164,19 @@ export default function Home() {
   const handleDeleteTodo = async (id: string) => {
     try {
       await todoApi.deleteTodo(id);
-      setTodos(prevTodos => {
-        if (!Array.isArray(prevTodos)) return [];
-        return prevTodos.filter(todo => todo.id !== id);
-      });
+
+      if (!isConnected) {
+        setTodos(prevTodos => {
+          if (!Array.isArray(prevTodos)) return [];
+          return prevTodos.filter(todo => todo.id !== id);
+        });
+      }
     } catch (error) {
       console.error(`Failed to delete todo with id ${id}:`, error);
     }
   };
 
-  // Toggle form visibility on mobile
+
   const toggleForm = () => {
     setShowForm(!showForm);
   };
@@ -153,24 +205,43 @@ export default function Home() {
             <h1 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0 }}>Task Manager</h1>
           </div>
           
-          {/* Mobile "Compose" button */}
-          <button
-            onClick={toggleForm}
-            className="lg:hidden"
-            style={{ 
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'var(--primary-light)', 
-              color: 'var(--primary)',
-              borderRadius: '50%',
-              padding: '0.5rem',
-              width: '2.5rem',
-              height: '2.5rem'
-            }}
-          >
-            <Plus size={18} />
-          </button>
+          {/* Connection status indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ 
+              width: '8px', 
+              height: '8px', 
+              borderRadius: '50%', 
+              backgroundColor: isConnected ? 'var(--success)' : 'var(--error)',
+              display: 'inline-block'
+            }}></span>
+            <span style={{ 
+              fontSize: '0.75rem', 
+              color: 'var(--text-tertiary)',
+              display: 'inline-block',
+              marginRight: '1rem'
+            }}>
+              {isConnected ? 'Real-time' : 'Periodic Updates'}
+            </span>
+            
+            {/* Mobile "Compose" button */}
+            <button
+              onClick={toggleForm}
+              className="lg:hidden"
+              style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'var(--primary-light)', 
+                color: 'var(--primary)',
+                borderRadius: '50%',
+                padding: '0.5rem',
+                width: '2.5rem',
+                height: '2.5rem'
+              }}
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         </header>
         
         <div style={{ 
@@ -179,7 +250,7 @@ export default function Home() {
           height: 'calc(100% - 64px)',
           overflow: 'hidden'
         }}>
-          {/* Sidebar with form */}
+
           <div 
             className={`${showForm ? 'block' : 'hidden'} lg:block`}
             style={{ 
@@ -194,8 +265,7 @@ export default function Home() {
           >
             <TodoForm onSubmit={handleCreateTodo} />
           </div>
-          
-          {/* Main content area */}
+
           <div style={{ 
             flex: 1, 
             overflowY: 'auto',

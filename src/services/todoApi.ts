@@ -2,9 +2,9 @@ import { CreateTodoPayload, Todo, UpdateTodoPayload } from '@/types/todo';
 
 // During development, always use the relative API URL path
 // This will work with Next.js API rewrites
-// const API_URL = 'http://localhost:8000/api';
+const API_URL = 'http://localhost:8000/api';
 
-const API_URL = 'https://resollect-assignment-254j.onrender.com/api';
+// const API_URL = 'https://resollect-assignment-254j.onrender.com/api';
 
 
 interface PaginatedResponse<T> {

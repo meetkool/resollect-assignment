@@ -77,7 +77,7 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
     <div className="space-y-6" style={{ backgroundColor: 'var(--background)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}>
       <div style={{ padding: '1.5rem 1.5rem 0.75rem', borderBottom: '1px solid var(--border)' }}>
         <div className="flex justify-between items-center mb-4">
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0 }}>Inbox</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0 }}>Ongoing</h2>
           <button 
             onClick={handleRefresh}
             className="secondary"
@@ -104,7 +104,7 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
           <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', width: '1rem', height: '1rem' }} />
           <input
             type="text"
-            placeholder="Search in emails..."
+            placeholder="Search in tasks..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -139,7 +139,7 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Inbox style={{ width: '1rem', height: '1rem' }} />
-              <span>Inbox</span>
+              <span>Ongoing</span>
               <span className="badge badge-primary" style={{ marginLeft: '0.25rem' }}>
                 {tabCounts.ongoing}
               </span>
@@ -178,7 +178,7 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Mail style={{ width: '1rem', height: '1rem' }} />
-              <span>All mail</span>
+              <span>All tasks</span>
               <span className="badge" style={{ marginLeft: '0.25rem', backgroundColor: 'var(--secondary)', color: 'var(--text-secondary)' }}>
                 {tabCounts.all}
               </span>
@@ -219,7 +219,7 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
           {searchTerm ? (
             <>
               <Search style={{ margin: '0 auto 1rem', width: '2rem', height: '2rem', color: 'var(--text-tertiary)' }} />
-              <p style={{ fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem' }}>No emails match your search</p>
+              <p style={{ fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem' }}>No tasks match your search</p>
               <p style={{ marginBottom: '1.25rem' }}>Try adjusting your search or filter criteria</p>
               <button
                 onClick={() => setSearchTerm('')}
@@ -232,7 +232,7 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
           ) : (
             <>
               <Inbox style={{ margin: '0 auto 1rem', width: '2rem', height: '2rem', color: 'var(--text-tertiary)' }} />
-              <p style={{ fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem' }}>No emails found in this category</p>
+              <p style={{ fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem' }}>No tasks found in this category</p>
               <p>Add a new task to see it in this folder</p>
             </>
           )}

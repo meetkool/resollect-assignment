@@ -10,6 +10,8 @@ from .cron import update_todo_statuses
 from .utils import success_response, error_response, handle_exception
 from django.db.models import Count, Avg, F, ExpressionWrapper, fields, Q
 import datetime
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 100
@@ -33,6 +35,17 @@ class TodoViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         try:
             response = super().create(request, *args, **kwargs)
+            
+            # Notify WebSocket clients about the new todo
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "todos",
+                {
+                    "type": "todo_create",
+                    "todo": response.data
+                }
+            )
+            
             return success_response(
                 data=response.data, 
                 message='Todo created successfully', 
@@ -44,6 +57,17 @@ class TodoViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         try:
             response = super().update(request, *args, **kwargs)
+            
+            # Notify WebSocket clients about the updated todo
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "todos",
+                {
+                    "type": "todo_update",
+                    "todo": response.data
+                }
+            )
+            
             return success_response(
                 data=response.data,
                 message='Todo updated successfully'
@@ -53,7 +77,19 @@ class TodoViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         try:
+            todo_id = self.get_object().id
             super().destroy(request, *args, **kwargs)
+            
+            # Notify WebSocket clients about the deleted todo
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "todos",
+                {
+                    "type": "todo_delete",
+                    "todo_id": str(todo_id)
+                }
+            )
+            
             return success_response(
                 message='Todo deleted successfully'
             )
@@ -67,6 +103,17 @@ class TodoViewSet(viewsets.ModelViewSet):
         todo.status = 'success'
         todo.save()
         serializer = self.get_serializer(todo)
+        
+        # Notify WebSocket clients about the updated todo
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "todos",
+            {
+                "type": "todo_update",
+                "todo": serializer.data
+            }
+        )
+        
         return success_response(
             data=serializer.data,
             message='Todo marked as complete'

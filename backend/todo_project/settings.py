@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'django_crontab',  # Added for cron jobs
+    'channels',  # For WebSockets
     # Custom apps
     'todo_api',
 ]
@@ -58,6 +59,28 @@ TEMPLATES = [
         },
     },
 ]
+
+# Channels configuration
+ASGI_APPLICATION = "todo_project.asgi.application"
+
+# Use in-memory channel layer for development
+if DEBUG:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
+else:
+    # Use Redis channel layer for production
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [env('REDIS_URL', default='redis://localhost:6379/0')],
+            },
+        },
+    }
+
 WSGI_APPLICATION = 'todo_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
