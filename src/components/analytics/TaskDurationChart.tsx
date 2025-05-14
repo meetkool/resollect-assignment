@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { AnalyticsDurationAnalysis } from '@/types/analytics';
 interface TaskDurationChartProps {
@@ -7,12 +7,14 @@ interface TaskDurationChartProps {
 }
 const TaskDurationChart = ({ data }: TaskDurationChartProps) => {
   const chartRef = useRef<SVGSVGElement>(null);
-  // Define colors for different statuses
-  const statusColors: Record<string, string> = {
+  
+  // Use useMemo to prevent statusColors from being recreated on every render
+  const statusColors = useMemo<Record<string, string>>(() => ({
     ongoing: '#FCD34D', // yellow
     success: '#10B981', // green
     failure: '#EF4444', // red
-  };
+  }), []);
+
   const formatDurationRange = (key: string): string => {
     switch(key) {
       case 'short': return 'Short (< 1 day)';

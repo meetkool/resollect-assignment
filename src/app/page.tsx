@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Todo, CreateTodoPayload } from '@/types/todo';
 import { todoApi } from '@/services/todoApi';
-import { getAutoStatus } from '@/utils/todoUtils';
 import TodoForm from '@/components/TodoForm';
 import TodoTabs from '@/components/TodoTabs';
 
@@ -16,7 +15,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const lastCheckRef = useRef<number>(0);
 
-  const fetchTodos = async () => {
+  const fetchTodos = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -39,35 +38,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const updateTaskStatuses = useCallback(async () => {
-    if (!Array.isArray(todos) || todos.length === 0) return;
-    
-    const updatedTodos = [...todos]; 
-    let hasChanges = false;
-    
-    for (let i = 0; i < updatedTodos.length; i++) {
-      const todo = updatedTodos[i];
-      const autoStatus = getAutoStatus(todo);
-      
-      if (todo.status !== autoStatus) {
-        if (DEBUG_MODE) console.log(`Updating todo ${todo.id} from ${todo.status} to ${autoStatus}`);
-        
-        try {
-          const updatedTodo = await todoApi.updateTodo(todo.id, { status: autoStatus });
-          updatedTodos[i] = updatedTodo; 
-          hasChanges = true;
-        } catch (error) {
-          console.error(`Failed to update status for todo ${todo.id}:`, error);
-        }
-      }
-    }
-    
-    if (hasChanges) {
-      setTodos(updatedTodos);
-    }
-  }, [todos]);
+  }, []);
 
   const forceCheckExpiredTasks = useCallback(async () => {
     // Only check expired tasks if it's been at least 30 seconds since the last check
@@ -106,18 +77,8 @@ export default function Home() {
   }, [todos]);
 
   useEffect(() => {
-    const fetchAndUpdate = async () => {
-      await fetchTodos();
-      
-      // Only check expired tasks after initial data load
-      // Don't check repeatedly on every render
-      if (todos.length > 0) {
-        await forceCheckExpiredTasks();
-      }
-    };
-    
-    // Initial fetch
-    fetchAndUpdate();
+    // Only fetch on initial render, not on every render
+    fetchTodos();
     
     // Set up a reasonable polling interval (every 60 seconds)
     // to periodically update task statuses
@@ -126,7 +87,14 @@ export default function Home() {
     return () => {
       clearInterval(intervalId);
     };
-  }, []); // Remove the dependencies to prevent excessive re-renders
+  }, [fetchTodos]); // Add fetchTodos as a dependency since it's used in useEffect
+
+  // Run forceCheckExpiredTasks in a separate useEffect that depends on todos.length
+  useEffect(() => {
+    if (todos.length > 0) {
+      forceCheckExpiredTasks();
+    }
+  }, [todos.length, forceCheckExpiredTasks]);
 
   const handleCreateTodo = async (todoData: CreateTodoPayload) => {
     try {

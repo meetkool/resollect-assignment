@@ -6,7 +6,8 @@ import { CreateTodoPayload, Todo, UpdateTodoPayload } from '@/types/todo';
 
 const API_URL = 'https://resollect-assignment-254j.onrender.com/api';
 
-console.log('Using API URL:', API_URL);
+// Log API URL once, not on every import
+// console.log('Using API URL:', API_URL);
 
 interface PaginatedResponse<T> {
   count: number;
@@ -25,7 +26,8 @@ export const todoApi = {
       throw new Error('Failed to fetch todos');
     }
     const data = await response.json();
-    console.log('Todo data received:', data);
+    // Removed excessive logging that was causing console spam
+    // console.log('Todo data received:', data);
     if (Array.isArray(data)) {
       return data;
     } else if (data && typeof data === 'object' && 'results' in data) {
