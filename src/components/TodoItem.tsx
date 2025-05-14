@@ -252,14 +252,15 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
     }
   };
   
-  // Generate a fake sender name based on the task and current date
+  // Generate a fake sender name based on the task
   const generateSenderName = () => {
-    // Use first word of title and a fixed last name based on priority
-    const firstWord = todo.title.split(' ')[0];
-    const lastName = todo.priority === 'high' ? 'Johnson' : 
-                     todo.priority === 'medium' ? 'Smith' : 'Davis';
+    // Just use the first couple of words from the title
+    const words = todo.title.split(' ');
+    const displayName = words.length > 1 
+      ? `${words[0]} ${words[1]}` 
+      : words[0];
     
-    return `${firstWord} ${lastName}`;
+    return displayName;
   };
 
   const deadlineDate = new Date(todo.deadline);

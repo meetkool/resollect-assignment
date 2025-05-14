@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Todo, CreateTodoPayload } from '@/types/todo';
 import { todoApi } from '@/services/todoApi';
 import { websocketService } from '@/services/websocketService';
@@ -14,7 +14,6 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const lastCheckRef = useRef<number>(0);
   const [showForm, setShowForm] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -147,10 +146,9 @@ export default function Home() {
       const newTodo = await todoApi.createTodo(todoData);
       console.log("Created todo:", newTodo);
       
-
-      if (!isConnected) {
-        setTodos(prevTodos => Array.isArray(prevTodos) ? [newTodo, ...prevTodos] : [newTodo]);
-      }
+      // Let the WebSocket service handle the UI update by broadcasting the event
+      // This will work for both mock and real WebSocket implementations
+      websocketService.sendCreateEvent(newTodo);
       
       if (window.innerWidth < 1024) {
         setShowForm(false); 
@@ -165,12 +163,9 @@ export default function Home() {
     try {
       await todoApi.deleteTodo(id);
 
-      if (!isConnected) {
-        setTodos(prevTodos => {
-          if (!Array.isArray(prevTodos)) return [];
-          return prevTodos.filter(todo => todo.id !== id);
-        });
-      }
+      // Let the WebSocket service handle the UI update by broadcasting the event
+      // This will work for both mock and real WebSocket implementations
+      websocketService.sendDeleteEvent(id);
     } catch (error) {
       console.error(`Failed to delete todo with id ${id}:`, error);
     }

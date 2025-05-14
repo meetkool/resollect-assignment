@@ -8,6 +8,7 @@ import ProductivityByHourChart from '@/components/analytics/ProductivityByHourCh
 import TaskDurationChart from '@/components/analytics/TaskDurationChart';
 import ActivityHeatmap from '@/components/analytics/ActivityHeatmap';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import styles from './analytics.module.css';
 
 export default function AnalyticsDashboard() {
   const [completionStats, setCompletionStats] = useState<AnalyticsCompletionStats | null>(null);
@@ -91,72 +92,106 @@ export default function AnalyticsDashboard() {
   const overallSuccessRate = totalTasks > 0 ? Math.round((successCount / totalTasks) * 100) : 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Task Analytics Dashboard</h1>
+    <div className={styles.dashboardContainer}>
+      <div className={styles.dashboardHeader}>
+        <h1 className={styles.dashboardTitle}>Task Analytics Dashboard</h1>
+      </div>
       
-      {/* GitHub-style Activity Heatmap - Now at the top for visibility */}
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
-        <h2 className="text-lg font-semibold mb-4">Task Activity Heatmap</h2>
+      <div className={`${styles.gridContainer} ${styles.statsGrid}`}>
+        <div className={styles.card}>
+          <div className={styles.statLabel}>Task Success Rate</div>
+          <div style={{ display: 'flex', alignItems: 'baseline' }}>
+            <span className={styles.statValue} style={{ color: 'var(--primary)' }}>{overallSuccessRate}%</span>
+            <span className={styles.statDescription}>completed successfully</span>
+          </div>
+        </div>
+        
+        <div className={styles.card}>
+          <div className={styles.statLabel}>Total Tasks</div>
+          <div style={{ display: 'flex', alignItems: 'baseline' }}>
+            <span className={styles.statValue} style={{ color: 'var(--primary)' }}>{totalTasks}</span>
+            <span className={styles.statDescription}>tasks created</span>
+          </div>
+        </div>
+        
+        <div className={styles.card}>
+          <div className={styles.statLabel}>Avg. Completion Time</div>
+          <div style={{ display: 'flex', alignItems: 'baseline' }}>
+            <span className={styles.statValue} style={{ color: 'var(--primary)' }}>
+              {productivityPatterns?.avg_completion_time_hours?.toFixed(1) || 0}
+            </span>
+            <span className={styles.statDescription}>hours</span>
+          </div>
+        </div>
+        
+        <div className={styles.card}>
+          <div className={styles.statLabel}>Tasks In Progress</div>
+          <div style={{ display: 'flex', alignItems: 'baseline' }}>
+            <span className={styles.statValue} style={{ color: 'var(--primary)' }}>
+              {completionStats?.status_distribution?.find(item => item.status === 'ongoing')?.count || 0}
+            </span>
+            <span className={styles.statDescription}>ongoing tasks</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className={`${styles.gridContainer} ${styles.chartGrid3}`}>
+        <div className={`${styles.card} ${styles.cardDoubleWidth}`}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Completion Rate Trend</h2>
+          </div>
+          {completionStats?.weekly_completion && (
+            <div className={styles.chartContainer}>
+              <CompletionRateChart data={completionStats.weekly_completion} />
+            </div>
+          )}
+        </div>
+        
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Task Status Distribution</h2>
+          </div>
+          {completionStats?.status_distribution && (
+            <div className={styles.chartContainer}>
+              <StatusDistributionChart data={completionStats.status_distribution} />
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* GitHub-style Activity Heatmap */}
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <h2 className={styles.cardTitle}>Task Activity Heatmap</h2>
+        </div>
         {completionStats?.weekly_completion && (
           <ActivityHeatmap data={completionStats.weekly_completion} />
         )}
-        <div className="text-right mt-2 text-sm text-gray-500">
-          <span>Daily task completion activity (GitHub-style visualization)</span>
+        <div className={styles.captionText}>
+          Daily task completion activity (GitHub-style visualization)
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-gray-500 text-sm font-medium mb-2">Task Success Rate</h3>
-          <div className="flex items-end">
-            <span className="text-4xl font-bold text-indigo-600">{overallSuccessRate}%</span>
-            <span className="text-gray-500 ml-2 text-sm">completed successfully</span>
+      <div className={`${styles.gridContainer} ${styles.chartGrid2}`}>
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Productivity by Hour</h2>
           </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-gray-500 text-sm font-medium mb-2">Total Tasks</h3>
-          <div className="flex items-end">
-            <span className="text-4xl font-bold text-indigo-600">{totalTasks}</span>
-            <span className="text-gray-500 ml-2 text-sm">tasks created</span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-gray-500 text-sm font-medium mb-2">Avg. Completion Time</h3>
-          <div className="flex items-end">
-            <span className="text-4xl font-bold text-indigo-600">
-              {productivityPatterns?.avg_completion_time_hours?.toFixed(1) || 0}
-            </span>
-            <span className="text-gray-500 ml-2 text-sm">hours</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Completion Rate Trend</h2>
-          {completionStats?.weekly_completion && (
-            <CompletionRateChart data={completionStats.weekly_completion} />
-          )}
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Task Status Distribution</h2>
-          {completionStats?.status_distribution && (
-            <StatusDistributionChart data={completionStats.status_distribution} />
-          )}
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Productivity by Hour</h2>
           {productivityPatterns?.creation_hour_distribution && (
-            <ProductivityByHourChart data={productivityPatterns.creation_hour_distribution} />
+            <div className={styles.chartContainer}>
+              <ProductivityByHourChart data={productivityPatterns.creation_hour_distribution} />
+            </div>
           )}
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Task Duration Analysis</h2>
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>Task Duration Analysis</h2>
+          </div>
           {durationAnalysis && (
-            <TaskDurationChart data={durationAnalysis} />
+            <div className={styles.chartContainer}>
+              <TaskDurationChart data={durationAnalysis} />
+            </div>
           )}
         </div>
       </div>

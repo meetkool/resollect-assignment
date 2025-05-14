@@ -3,27 +3,41 @@ import { Todo } from "@/types/todo";
 // Define events that can be subscribed to
 type WebSocketEventType = 'connect' | 'disconnect' | 'todo_list' | 'todo_create' | 'todo_update' | 'todo_delete' | 'error';
 
-type Listener = (data: any) => void;
-
-interface TodoListEvent {
-  type: 'todo_list';
+// Define interfaces for type-safe event payloads
+interface TodoListPayload {
   todos: Todo[];
 }
 
-interface TodoCreateEvent {
-  type: 'todo_create';
+interface TodoCreatePayload {
   todo: Todo;
 }
 
-interface TodoUpdateEvent {
-  type: 'todo_update';
+interface TodoUpdatePayload {
   todo: Todo;
 }
 
-interface TodoDeleteEvent {
-  type: 'todo_delete';
+interface TodoDeletePayload {
   todo_id: string;
 }
+
+interface ErrorPayload {
+  message: string;
+  [key: string]: unknown;
+}
+
+// Type mapping for payload types
+interface EventPayloadMap {
+  connect: { connected: boolean };
+  disconnect: { disconnected: boolean };
+  todo_list: TodoListPayload;
+  todo_create: TodoCreatePayload;
+  todo_update: TodoUpdatePayload;
+  todo_delete: TodoDeletePayload;
+  error: ErrorPayload;
+}
+
+// Type-safe listener
+type Listener<T extends WebSocketEventType> = (data: EventPayloadMap[T]) => void;
 
 // Determine if we should use a mock WebSocket implementation
 const USE_MOCK_WEBSOCKET = true; // Set to false when backend WebSockets are ready
@@ -34,13 +48,13 @@ const USE_MOCK_WEBSOCKET = true; // Set to false when backend WebSockets are rea
  */
 class WebSocketService {
   private socket: WebSocket | null = null;
-  private listeners = new Map<WebSocketEventType, Set<Listener>>();
+  private listeners = new Map<WebSocketEventType, Set<Listener<WebSocketEventType>>>();
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 3000; // 3 seconds initial delay
   private isConnecting = false;
-  private mockConnected = false;
+  public mockConnected = false; // Public so it can be checked
   
   // Initialize the WebSocket connection
   public connect(): void {
@@ -83,14 +97,14 @@ class WebSocketService {
         }
       };
       
-      this.socket.onclose = (event) => {
+      this.socket.onclose = () => {
         this.isConnecting = false;
-        console.log(`WebSocket closed with code ${event.code}, reason: ${event.reason}`);
-        this.notifyListeners('disconnect', { code: event.code, reason: event.reason });
+        console.log(`WebSocket closed`);
+        this.notifyListeners('disconnect', { disconnected: true });
         this.reconnect();
       };
       
-      this.socket.onerror = (event) => {
+      this.socket.onerror = () => {
         this.isConnecting = false;
         
         // Create a more meaningful error object
@@ -145,11 +159,41 @@ class WebSocketService {
     return `${protocol}//${host}/ws/todos/`;
   }
   
+  // Mock method to simulate server-side create event
+  private mockCreateEvent(todo: Todo): void {
+    if (!this.mockConnected) return;
+    
+    console.log('Mock WebSocket: Simulating todo_create event');
+    setTimeout(() => {
+      this.notifyListeners('todo_create', { todo });
+    }, 100); // Small delay to simulate server processing
+  }
+  
+  // Mock method to simulate server-side update event
+  private mockUpdateEvent(todo: Todo): void {
+    if (!this.mockConnected) return;
+    
+    console.log('Mock WebSocket: Simulating todo_update event');
+    setTimeout(() => {
+      this.notifyListeners('todo_update', { todo });
+    }, 100); // Small delay to simulate server processing
+  }
+  
+  // Mock method to simulate server-side delete event
+  private mockDeleteEvent(todoId: string): void {
+    if (!this.mockConnected) return;
+    
+    console.log('Mock WebSocket: Simulating todo_delete event');
+    setTimeout(() => {
+      this.notifyListeners('todo_delete', { todo_id: todoId });
+    }, 100); // Small delay to simulate server processing
+  }
+  
   // Close the WebSocket connection
   public disconnect(): void {
     if (USE_MOCK_WEBSOCKET) {
       this.mockConnected = false;
-      this.notifyListeners('disconnect', { code: 1000, reason: 'User disconnected' });
+      this.notifyListeners('disconnect', { disconnected: true });
       console.log('Mock WebSocket disconnected');
       return;
     }
@@ -166,29 +210,31 @@ class WebSocketService {
   }
   
   // Subscribe to WebSocket events
-  public subscribe(event: WebSocketEventType, listener: Listener): () => void {
+  public subscribe<T extends WebSocketEventType>(event: T, listener: Listener<T>): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     
-    this.listeners.get(event)!.add(listener);
+    // Need to cast here due to TypeScript's limitations with Map and generics
+    (this.listeners.get(event) as Set<Listener<T>>).add(listener);
     
     // Return an unsubscribe function
     return () => {
       const listeners = this.listeners.get(event);
       if (listeners) {
-        listeners.delete(listener);
+        (listeners as Set<Listener<T>>).delete(listener);
       }
     };
   }
   
   // Notify all listeners of an event
-  private notifyListeners(event: WebSocketEventType, data: any): void {
+  private notifyListeners<T extends WebSocketEventType>(event: T, data: EventPayloadMap[T]): void {
     const listeners = this.listeners.get(event);
     if (listeners) {
       listeners.forEach(listener => {
         try {
-          listener(data);
+          // Need to cast here due to TypeScript's limitations
+          (listener as Listener<T>)(data);
         } catch (error) {
           console.error(`Error in ${event} listener:`, error);
         }
@@ -236,6 +282,51 @@ class WebSocketService {
       this.reconnectAttempts++;
       this.connect();
     }, delay);
+  }
+  
+  // Utility to send create event in both real and mock modes
+  public sendCreateEvent(todo: Todo): void {
+    if (USE_MOCK_WEBSOCKET) {
+      this.mockCreateEvent(todo);
+      return;
+    }
+    
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ 
+        type: 'create_todo',
+        todo
+      }));
+    }
+  }
+  
+  // Utility to send update event in both real and mock modes
+  public sendUpdateEvent(todo: Todo): void {
+    if (USE_MOCK_WEBSOCKET) {
+      this.mockUpdateEvent(todo);
+      return;
+    }
+    
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ 
+        type: 'update_todo',
+        todo
+      }));
+    }
+  }
+  
+  // Utility to send delete event in both real and mock modes
+  public sendDeleteEvent(todoId: string): void {
+    if (USE_MOCK_WEBSOCKET) {
+      this.mockDeleteEvent(todoId);
+      return;
+    }
+    
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify({ 
+        type: 'delete_todo',
+        todo_id: todoId
+      }));
+    }
   }
 }
 
