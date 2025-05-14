@@ -6,8 +6,6 @@ import { CreateTodoPayload, Todo, UpdateTodoPayload } from '@/types/todo';
 
 const API_URL = 'https://resollect-assignment-254j.onrender.com/api';
 
-// Log API URL once, not on every import
-// console.log('Using API URL:', API_URL);
 
 interface PaginatedResponse<T> {
   count: number;

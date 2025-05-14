@@ -1,6 +1,6 @@
 import { CreateTodoPayload, TodoPriority } from '@/types/todo';
 import { useState } from 'react';
-import { PlusCircle, Calendar, Tag, X, Check, User, Paperclip, AlignLeft, Clock } from "lucide-react";
+import { PlusCircle, Tag, X, Check, Paperclip, Clock } from "lucide-react";
 
 interface TodoFormProps {
   onSubmit: (todo: CreateTodoPayload) => Promise<void>;

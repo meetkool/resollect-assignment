@@ -6,7 +6,6 @@ import { todoApi } from '@/services/todoApi';
 import TodoForm from '@/components/TodoForm';
 import TodoTabs from '@/components/TodoTabs';
 import { Loader2, Mail, Plus } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Set to false to disable excessive console logs
 const DEBUG_MODE = false;

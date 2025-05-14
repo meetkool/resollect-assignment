@@ -1,7 +1,7 @@
 import { Todo, TodoStatus } from '@/types/todo';
 import { useState, useEffect, useMemo } from 'react';
 import TodoItem from './TodoItem';
-import { Search, ListFilter, Check, AlertTriangle, Clock, X, Inbox, Star, Mail, Archive, RefreshCw } from 'lucide-react';
+import { Search, Check, AlertTriangle, X, Inbox, Star, Mail, RefreshCw } from 'lucide-react';
 
 // Set to false to disable excessive console logs (should match value in page.tsx)
 const DEBUG_MODE = false;
