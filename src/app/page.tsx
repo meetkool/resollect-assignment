@@ -5,6 +5,8 @@ import { Todo, CreateTodoPayload } from '@/types/todo';
 import { todoApi } from '@/services/todoApi';
 import TodoForm from '@/components/TodoForm';
 import TodoTabs from '@/components/TodoTabs';
+import { Loader2, Mail, Plus } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Set to false to disable excessive console logs
 const DEBUG_MODE = false;
@@ -14,6 +16,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const lastCheckRef = useRef<number>(0);
+  const [showForm, setShowForm] = useState(false);
 
   const fetchTodos = useCallback(async () => {
     try {
@@ -101,6 +104,9 @@ export default function Home() {
       const newTodo = await todoApi.createTodo(todoData);
       console.log("Created todo:", newTodo);
       setTodos(prevTodos => Array.isArray(prevTodos) ? [newTodo, ...prevTodos] : [newTodo]);
+      if (window.innerWidth < 1024) {
+        setShowForm(false); // Close form after submitting on mobile
+      }
     } catch (error) {
       console.error('Failed to create todo:', error);
       throw error; 
@@ -119,51 +125,107 @@ export default function Home() {
     }
   };
 
-  return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 16px' }}>
-      <header style={{ marginBottom: '40px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.5rem' }}>Smart Todo List</h1>
-        <p style={{ color: '#4b5563', fontSize: '1.125rem' }}>
-          Tasks automatically transition based on deadlines
-        </p>
-      </header>
+  // Toggle form visibility on mobile
+  const toggleForm = () => {
+    setShowForm(!showForm);
+  };
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
-        <div>
-          <TodoForm onSubmit={handleCreateTodo} />
-        </div>
+  return (
+    <div className="container mx-auto px-4 py-6 min-h-screen" style={{ maxWidth: '1400px' }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: 'calc(100vh - 100px)',
+        backgroundColor: 'var(--background)',
+        borderRadius: 'var(--radius)',
+        boxShadow: 'var(--shadow)',
+        overflow: 'hidden'
+      }}>
+        <header style={{ 
+          padding: '1rem 1.5rem',
+          borderBottom: '1px solid var(--border)',
+          backgroundColor: 'var(--background)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Mail size={24} style={{ color: 'var(--primary)' }} />
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '600', margin: 0 }}>Task Manager</h1>
+          </div>
+          
+          {/* Mobile "Compose" button */}
+          <button
+            onClick={toggleForm}
+            className="lg:hidden"
+            style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'var(--primary-light)', 
+              color: 'var(--primary)',
+              borderRadius: '50%',
+              padding: '0.5rem',
+              width: '2.5rem',
+              height: '2.5rem'
+            }}
+          >
+            <Plus size={18} />
+          </button>
+        </header>
         
-        <div>
-          {isLoading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
-              <div style={{ 
-                width: '3.5rem', 
-                height: '3.5rem', 
-                borderRadius: '9999px',
-                borderTop: '2px solid #3b82f6',
-                borderBottom: '2px solid #3b82f6',
-                animation: 'spin 1s linear infinite'
-              }}></div>
-            </div>
-          ) : error ? (
-            <div style={{ 
-              backgroundColor: '#fee2e2', 
-              color: '#dc2626', 
-              padding: '1.25rem', 
-              borderRadius: '0.75rem', 
-              border: '1px solid #fecaca' 
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ fontWeight: '500' }}>{error}</span>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'row',
+          height: 'calc(100% - 64px)',
+          overflow: 'hidden'
+        }}>
+          {/* Sidebar with form */}
+          <div 
+            className={`${showForm ? 'block' : 'hidden'} lg:block`}
+            style={{ 
+              width: '100%', 
+              maxWidth: '400px',
+              borderRight: '1px solid var(--border)',
+              overflowY: 'auto',
+              backgroundColor: 'var(--background-alt)',
+              height: '100%',
+              padding: '1.5rem'
+            }}
+          >
+            <TodoForm onSubmit={handleCreateTodo} />
+          </div>
+          
+          {/* Main content area */}
+          <div style={{ 
+            flex: 1, 
+            overflowY: 'auto',
+            height: '100%'
+          }}>
+            {isLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                <div style={{ animation: 'spin 1s linear infinite' }}>
+                  <Loader2 style={{ width: '40px', height: '40px', color: 'var(--primary)' }} />
+                </div>
               </div>
-            </div>
-          ) : (
-            <TodoTabs 
-              todos={todos} 
-              onUpdate={fetchTodos}
-              onDelete={handleDeleteTodo} 
-            />
-          )}
+            ) : error ? (
+              <div style={{ 
+                padding: '1rem', 
+                margin: '1rem',
+                backgroundColor: 'var(--error-light)', 
+                color: 'var(--error)', 
+                borderRadius: 'var(--radius)' 
+              }}>
+                {error}
+              </div>
+            ) : (
+              <TodoTabs 
+                todos={todos} 
+                onUpdate={fetchTodos}
+                onDelete={handleDeleteTodo} 
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

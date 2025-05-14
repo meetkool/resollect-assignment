@@ -1,6 +1,7 @@
 import { Todo, TodoStatus } from '@/types/todo';
 import { useState, useEffect, useMemo } from 'react';
 import TodoItem from './TodoItem';
+import { Search, ListFilter, Check, AlertTriangle, Clock, X, Inbox, Star, Mail, Archive, RefreshCw } from 'lucide-react';
 
 // Set to false to disable excessive console logs (should match value in page.tsx)
 const DEBUG_MODE = false;
@@ -10,16 +11,27 @@ interface TodoTabsProps {
   onUpdate: () => void;
   onDelete: (id: string) => void;
 }
-type TabType = 'all' | TodoStatus;
+
+type TabType = 'all' | 'important' | TodoStatus;
+
 export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('ongoing');
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredTodos, setFilteredTodos] = useState<Todo[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const todoArray = useMemo(() => Array.isArray(todos) ? todos : [], [todos]);
   
   useEffect(() => {
     const filtered = todoArray.filter(todo => {
+      // Special case for important tab
+      if (activeTab === 'important') {
+        return todo.priority === 'high' && 
+               (searchTerm === '' || 
+                todo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                todo.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      }
+      
       const matchesTab = activeTab === 'all' || todo.status === activeTab;
       const matchesSearch = searchTerm === '' || 
         todo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -28,11 +40,22 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
     });
     setFilteredTodos(filtered);
   }, [todoArray, activeTab, searchTerm]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    onUpdate();
+    // Simulate a refresh delay for better UX
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 800);
+  };
+
   const tabCounts = {
     all: todoArray.length,
     ongoing: todoArray.filter(todo => todo.status === 'ongoing').length,
     success: todoArray.filter(todo => todo.status === 'success').length,
     failure: todoArray.filter(todo => todo.status === 'failure').length,
+    important: todoArray.filter(todo => todo.priority === 'high').length,
   };
   
   if (DEBUG_MODE) {
@@ -41,6 +64,7 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
       ongoing: tabCounts.ongoing,
       success: tabCounts.success,
       failure: tabCounts.failure,
+      important: tabCounts.important,
       todosWithExpiredDeadline: todoArray.filter(todo => new Date(todo.deadline) < new Date()).length,
       statusCounts: todoArray.reduce((counts, todo) => {
         counts[todo.status] = (counts[todo.status] || 0) + 1;
@@ -49,127 +73,184 @@ export default function TodoTabs({ todos, onUpdate, onDelete }: TodoTabsProps) {
     });
   }
   
-  const handleTabClick = (tab: TabType) => {
-    setActiveTab(tab);
-  };
-  const getTabClasses = (tab: TabType) => {
-    return `filter-tab ${activeTab === tab ? 'filter-tab-active' : 'filter-tab-inactive'}`;
-  };
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-md">
+    <div className="space-y-6" style={{ backgroundColor: 'var(--background)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}>
+      <div style={{ padding: '1.5rem 1.5rem 0.75rem', borderBottom: '1px solid var(--border)' }}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0 }}>Inbox</h2>
+          <button 
+            onClick={handleRefresh}
+            className="secondary"
+            style={{ 
+              padding: '0.5rem',
+              borderRadius: '50%',
+              width: '2.25rem',
+              height: '2.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: isRefreshing ? 'var(--secondary)' : 'transparent'
+            }}
+          >
+            <RefreshCw 
+              size={18} 
+              className={isRefreshing ? 'animate-spin' : ''} 
+              style={{ color: 'var(--text-secondary)' }}
+            />
+          </button>
+        </div>
+      
         <div className="search-container">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="search-icon">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
+          <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', width: '1rem', height: '1rem' }} />
           <input
             type="text"
-            placeholder="Search tasks..."
+            placeholder="Search in emails..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
+            style={{ width: '100%', padding: '0.625rem 2.5rem 0.625rem 2.5rem' }}
           />
           {searchTerm && (
             <button
+              type="button"
               onClick={() => setSearchTerm('')}
-              className="search-clear"
               aria-label="Clear search"
+              style={{ 
+                position: 'absolute', 
+                right: '0.5rem', 
+                top: '50%', 
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                padding: '0.25rem',
+                cursor: 'pointer',
+                color: 'var(--text-tertiary)'
+              }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X style={{ width: '1rem', height: '1rem' }} />
             </button>
           )}
         </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-sm text-gray-500 mr-2">Filter:</span>
-          <button 
-            onClick={() => handleTabClick('ongoing')} 
-            className={getTabClasses('ongoing')}
+        
+        <div className="tabs">
+          <div 
+            className={`tab ${activeTab === 'ongoing' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ongoing')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Ongoing
-            <span className="badge badge-blue">
-              {tabCounts.ongoing}
-            </span>
-          </button>
-          <button 
-            onClick={() => handleTabClick('all')} 
-            className={getTabClasses('all')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Inbox style={{ width: '1rem', height: '1rem' }} />
+              <span>Inbox</span>
+              <span className="badge badge-primary" style={{ marginLeft: '0.25rem' }}>
+                {tabCounts.ongoing}
+              </span>
+            </div>
+          </div>
+          
+          <div 
+            className={`tab ${activeTab === 'important' ? 'active' : ''}`}
+            onClick={() => setActiveTab('important')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
-            All
-            <span className="badge badge-gray">
-              {tabCounts.all}
-            </span>
-          </button>
-          <button 
-            onClick={() => handleTabClick('success')} 
-            className={getTabClasses('success')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Star style={{ width: '1rem', height: '1rem' }} />
+              <span>Important</span>
+              <span className="badge badge-warning" style={{ marginLeft: '0.25rem', backgroundColor: 'var(--important-light)', color: 'var(--important)' }}>
+                {tabCounts.important}
+              </span>
+            </div>
+          </div>
+          
+          <div 
+            className={`tab ${activeTab === 'success' ? 'active' : ''}`}
+            onClick={() => setActiveTab('success')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Completed
-            <span className="badge badge-green">
-              {tabCounts.success}
-            </span>
-          </button>
-          <button 
-            onClick={() => handleTabClick('failure')} 
-            className={getTabClasses('failure')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Check style={{ width: '1rem', height: '1rem' }} />
+              <span>Completed</span>
+              <span className="badge badge-success" style={{ marginLeft: '0.25rem' }}>
+                {tabCounts.success}
+              </span>
+            </div>
+          </div>
+          
+          <div 
+            className={`tab ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all')}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
-            Failed
-            <span className="badge badge-red">
-              {tabCounts.failure}
-            </span>
-          </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Mail style={{ width: '1rem', height: '1rem' }} />
+              <span>All mail</span>
+              <span className="badge" style={{ marginLeft: '0.25rem', backgroundColor: 'var(--secondary)', color: 'var(--text-secondary)' }}>
+                {tabCounts.all}
+              </span>
+            </div>
+          </div>
+          
+          <div 
+            className={`tab ${activeTab === 'failure' ? 'active' : ''}`}
+            onClick={() => setActiveTab('failure')}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AlertTriangle style={{ width: '1rem', height: '1rem' }} />
+              <span>Failed</span>
+              <span className="badge badge-error" style={{ marginLeft: '0.25rem' }}>
+                {tabCounts.failure}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="space-y-4">
-        {filteredTodos.length === 0 ? (
-          <div className="text-center py-10 bg-gray-50 rounded-xl border border-gray-200 text-gray-500">
-            {searchTerm ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '24px', height: '24px' }} className="mx-auto text-gray-400 mb-3">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-                <p className="text-lg font-medium mb-2">No tasks match your search</p>
-                <p className="text-gray-400 mb-4">Try adjusting your search or filter criteria</p>
-                <button onClick={() => setSearchTerm('')} className="btn btn-secondary">
-                  Clear search
-                </button>
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={{ width: '24px', height: '24px' }} className="mx-auto text-gray-400 mb-3">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-                </svg>
-                <p className="text-lg font-medium mb-2">No tasks found in this category</p>
-                <p className="text-gray-400">Create a new task to get started</p>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {filteredTodos.map(todo => (
-              <TodoItem 
-                key={todo.id} 
-                todo={todo} 
-                onUpdate={onUpdate}
-                onDelete={() => onDelete(todo.id)}
-              />
-            ))}
-          </div>
-        )}
+      
+      <div style={{ padding: '0' }}>
+        {renderTodoList()}
       </div>
     </div>
   );
+  
+  function renderTodoList() {
+    if (filteredTodos.length === 0) {
+      return (
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '3rem 1rem',
+          color: 'var(--text-secondary)',
+          backgroundColor: 'var(--background-alt)',
+          borderBottom: '1px solid var(--border)'
+        }}>
+          {searchTerm ? (
+            <>
+              <Search style={{ margin: '0 auto 1rem', width: '2rem', height: '2rem', color: 'var(--text-tertiary)' }} />
+              <p style={{ fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem' }}>No emails match your search</p>
+              <p style={{ marginBottom: '1.25rem' }}>Try adjusting your search or filter criteria</p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="secondary"
+                style={{ padding: '0.5rem 1.25rem' }}
+              >
+                Clear search
+              </button>
+            </>
+          ) : (
+            <>
+              <Inbox style={{ margin: '0 auto 1rem', width: '2rem', height: '2rem', color: 'var(--text-tertiary)' }} />
+              <p style={{ fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem' }}>No emails found in this category</p>
+              <p>Add a new task to see it in this folder</p>
+            </>
+          )}
+        </div>
+      );
+    }
+    
+    return (
+      <div>
+        {filteredTodos.map(todo => (
+          <TodoItem 
+            key={todo.id} 
+            todo={todo} 
+            onUpdate={onUpdate}
+            onDelete={() => onDelete(todo.id)}
+          />
+        ))}
+      </div>
+    );
+  }
 } 

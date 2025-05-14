@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MainNav from "@/components/MainNav";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,17 +25,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
+        className={`${geistSans.variable} ${geistMono.variable}`}
+        style={{ fontFamily: 'var(--font-geist-sans)', backgroundColor: '#f9f9f9' }}
       >
         <MainNav />
-        <main className="min-h-screen relative px-4 pb-8 max-w-screen-lg mx-auto">
+        <main style={{ minHeight: '100vh', position: 'relative', paddingBottom: '3rem', maxWidth: '1400px', margin: '0 auto' }}>
           {children}
         </main>
-        <footer className="py-6 text-center text-neutral-500 text-sm">
+        <footer style={{ padding: '2rem 0', textAlign: 'center', fontSize: '0.875rem', color: '#666' }}>
           <p>Smart Todo List &copy; {new Date().getFullYear()}</p>
         </footer>
+        <Toaster position="top-right" />
       </body>
     </html>
   );
