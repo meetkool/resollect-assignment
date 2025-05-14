@@ -3,8 +3,8 @@
 A dynamic, full-stack todo list application with time-based task management, analytics, and productivity insights.
 
 ## live links 
-1. backend links :- https://resollect-assignment-254j.onrender.com
-2.  
+1. Frontend live link :- https://smart-todoapp.vercel.app/
+2. backend links :- https://resollect-assignment-254j.onrender.com
 
 ## Features
 
